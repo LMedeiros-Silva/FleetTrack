@@ -1,12 +1,22 @@
+import re
+
 class Veiculo:
-    def __init__(self, placa, modelo):
+    def init(self, placa, modelo):
         self.placa = placa
         self.modelo = modelo
+
+def validar_placa(placa):
+    return re.match(r'^[A-Z]{3}\d{4}$', placa.upper())
 
 veiculos = []
 
 def cadastrar():
     placa = input("Placa: ")
+
+    if not validar_placa(placa):
+        print("Placa inválida")
+        return
+
     modelo = input("Modelo: ")
     veiculos.append(Veiculo(placa, modelo))
     print("Veículo cadastrado")
