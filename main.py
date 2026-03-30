@@ -5,6 +5,11 @@ class Veiculo:
         self.placa = placa
         self.modelo = modelo
 
+class Manutencao:
+    def init(self, tipo, custo):
+        self.tipo = tipo
+        self.custo = custo
+
 def validar_placa(placa):
     return re.match(r'^[A-Z]{3}\d{4}$', placa.upper())
 
