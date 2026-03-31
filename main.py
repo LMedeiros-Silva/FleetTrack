@@ -2,15 +2,21 @@ import re
 
 MARCAS_VALIDAS = ["Toyota", "Honda", "Ford"]
 
+def sugerir_marca(nome):
+    for m in MARCAS_VALIDAS:
+        if m.lower().startswith(nome.lower()):
+            return m
+    return None
+
 class Veiculo:
-    def init(self, placa, marca, modelo):
+    def __init__(self, placa, marca, modelo):
         self.placa = placa
         self.marca = marca
         self.modelo = modelo
         self.historico = []
 
 class SistemaFrota:
-    def init(self):
+    def __init__(self):
         self.veiculos = []
 
     def cadastrar(self):
@@ -20,11 +26,11 @@ class SistemaFrota:
             print("Placa inválida")
             return
 
-        print("Marcas disponíveis:", MARCAS_VALIDAS)
-        marca = input("Marca: ").title()
+        marca_input = input("Marca: ")
+        marca = sugerir_marca(marca_input)
 
-        if marca not in MARCAS_VALIDAS:
-            print("Marca inválida")
+        if not marca:
+            print("Marca não encontrada")
             return
 
         modelo = input("Modelo: ")
