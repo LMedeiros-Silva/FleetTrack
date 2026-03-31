@@ -38,5 +38,12 @@ class SistemaFrota:
         self.veiculos.append(Veiculo(placa, marca, modelo))
         print("Veículo cadastrado")
 
+class Manutencao:
+    def __init__(self, tipo, custo):
+        if custo <= 0:
+            raise ValueError("Custo inválido")
+        self.tipo = tipo
+        self.custo = custo
+
 sistema = SistemaFrota()
 sistema.cadastrar()
