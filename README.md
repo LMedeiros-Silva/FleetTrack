@@ -30,8 +30,6 @@ python main.py
 
 fleettrack/
 ├── main.py
-├── veiculos.py
-├── validacoes.py
 └── README.md
 
 ---
@@ -48,7 +46,7 @@ fleettrack/
 
 ## 📸 Demonstração
 
-[Inserir GIF ou link para vídeo mostrando o sistema em funcionamento]
+https://youtu.be/raa5oTJ3_-E
 
 ---
 
@@ -67,4 +65,4 @@ fleettrack/
 
 * Repositório: https://github.com/LMedeiros-Silva/FleetTrack
 * Miro: https://miro.com/app/board/uXjVGpfw9Tc=/
-* Vídeo: [colocar link do vídeo]
+* Vídeo: https://youtu.be/raa5oTJ3_-E
