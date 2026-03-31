@@ -53,7 +53,6 @@ class Manutencao:
         return f"{self.tipo} | R$ {self.custo:.2f} | Status: {self.status}"
 
 
-
 class SistemaFrota:
     def __init__(self):
         self.veiculos = []
@@ -107,6 +106,24 @@ class SistemaFrota:
 
     def buscar_veiculo(self, placa):
         return next((v for v in self.veiculos if v.placa == placa), None)
+
+    def excluir_veiculo(self):
+        print("\n=== Exclusão de Veículo ===")
+
+        placa = input("Digite a placa do veículo que deseja excluir: ").upper()
+        veiculo = self.buscar_veiculo(placa)
+
+        if not veiculo:
+            print("Veículo não encontrado.")
+            return
+
+        confirmacao = input(f"Tem certeza que deseja excluir o veículo {veiculo.placa}? (S/N): ").upper()
+
+        if confirmacao == "S":
+            self.veiculos.remove(veiculo)
+            print("Veículo excluído com sucesso!")
+        else:
+            print("Operação cancelada.")
 
     def registrar_manutencao(self):
         print("\n=== Registro de Manutenção ===")
@@ -183,6 +200,7 @@ while True:
     print("3 - Registrar manutenção")
     print("4 - Concluir manutenção")
     print("5 - Consultar histórico")
+    print("6 - Excluir veículo")
     print("0 - Sair")
 
     opcao = input("Selecione uma opção: ")
@@ -197,6 +215,8 @@ while True:
         sistema.concluir_manutencao()
     elif opcao == "5":
         sistema.mostrar_historico()
+    elif opcao == "6":
+        sistema.excluir_veiculo()
     elif opcao == "0":
         print("Encerrando o sistema...")
         break
