@@ -56,7 +56,7 @@ https://youtu.be/raa5oTJ3_-E
 * Arthur Bergamaço (commits: feat, refactor) (RM556207)  
 * Breno Barbosa (commits: feat, test) (RM555348)
 * Renan Melo (commits: docs, feat) (RM558535)
-* Pietro Rodriguez (commits: feat)
+* Pietro Rodriguez (commits: feat) (RM555899)
 * Mateus Souza (commits: test, docs) (RM559118)
 
 ---
