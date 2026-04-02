@@ -68,13 +68,3 @@ https://youtu.be/raa5oTJ3_-E
 * Vídeo: https://youtu.be/raa5oTJ3_-E
 
 
----
-
-##  Membros
-Leonardo Medeiros da Silva (RM559220)  
-Renan Melo
-Breno Barbosa (555348)
-Arthur Bergamaço (RM556207)
-Mateus Souza (559118)
-Pietro Rodriguez
-
