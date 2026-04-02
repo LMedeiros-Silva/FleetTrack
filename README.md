@@ -52,12 +52,12 @@ https://youtu.be/raa5oTJ3_-E
 
 ## 👨‍💻 Integrantes do Grupo
 
-* Leonardo Medeiros (commits: feat, docs)
-* Arthur Bergamaço (commits: feat, refactor)
-* Breno Barbosa (commits: feat, test)
-* Renan Melo (commits: docs, feat)
+* Leonardo Medeiros (commits: feat, docs) (RM559220)
+* Arthur Bergamaço (commits: feat, refactor) (RM556207)  
+* Breno Barbosa (commits: feat, test) (RM555348)
+* Renan Melo (commits: docs, feat) (RM558535)
 * Pietro Rodriguez (commits: feat)
-* Mateus Souza (commits: test, docs)
+* Mateus Souza (commits: test, docs) (RM559118)
 
 ---
 
