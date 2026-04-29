@@ -1,4 +1,7 @@
 class Custo:
-    def init(self, descricao, valor):
+    def __init__(self, veiculo, tipo_manutencao, descricao, valor, data):
+        self.veiculo = veiculo
+        self.tipo_manutencao = tipo_manutencao
         self.descricao = descricao
         self.valor = valor
+        self.data = data

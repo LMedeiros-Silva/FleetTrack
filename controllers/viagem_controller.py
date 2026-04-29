@@ -1,25 +1,101 @@
 from models.viagem import Viagem
-from services.previsao_custo import calcular_custo
 from services.persistencia import Persistencia
+from utils.validacoes import validar_texto, validar_float_positivo
 
 
 class ViagemController:
     def __init__(self):
         self.viagens = []
         self.historico_previsoes = []
+        self.carregar_viagens()
         self.carregar_previsoes()
 
-    def criar(self, veiculo, rota, data, preco_combustivel):
-        custo = calcular_custo(
-            rota.distancia,
-            veiculo.consumo,
-            preco_combustivel
+    def carregar_viagens(self):
+        dados = Persistencia.carregar("viagens.json")
+
+        for item in dados:
+            viagem = Viagem(
+                item["origem"],
+                item["destino"],
+                item["distancia"],
+                item["data"],
+                item["horario"],
+                item["motorista"],
+                item["veiculo_modelo"],
+                item["veiculo_placa"],
+                item["status"]
+            )
+            self.viagens.append(viagem)
+
+    def salvar_viagens(self):
+        dados = []
+
+        for viagem in self.viagens:
+            dados.append({
+                "origem": viagem.origem,
+                "destino": viagem.destino,
+                "distancia": viagem.distancia,
+                "data": viagem.data,
+                "horario": viagem.horario,
+                "motorista": viagem.motorista,
+                "veiculo_modelo": viagem.veiculo_modelo,
+                "veiculo_placa": viagem.veiculo_placa,
+                "status": viagem.status
+            })
+
+        Persistencia.salvar("viagens.json", dados)
+
+    def cadastrar_viagem(
+        self,
+        origem,
+        destino,
+        distancia,
+        data,
+        horario,
+        motorista,
+        veiculo,
+        status
+    ):
+        if not validar_texto(origem):
+            return False, "Origem inválida."
+
+        if not validar_texto(destino):
+            return False, "Destino inválido."
+
+        if not validar_float_positivo(distancia):
+            return False, "Distância inválida."
+
+        if not validar_texto(data):
+            return False, "Data inválida."
+
+        if not validar_texto(horario):
+            return False, "Horário inválido."
+
+        if not validar_texto(motorista):
+            return False, "Motorista inválido."
+
+        if veiculo is None:
+            return False, "Veículo inválido."
+
+        if status not in ["scheduled", "in-progress", "completed"]:
+            return False, "Status inválido."
+
+        viagem = Viagem(
+            origem,
+            destino,
+            float(distancia),
+            data,
+            horario,
+            motorista,
+            veiculo.modelo,
+            veiculo.placa,
+            status
         )
 
-        viagem = Viagem(veiculo, rota, data, custo)
         self.viagens.append(viagem)
+        self.salvar_viagens()
 
-        return viagem
+        return True, "Viagem cadastrada com sucesso."
 
     def listar(self):
         return self.viagens

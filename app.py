@@ -3,34 +3,37 @@ import sys
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QFrame,
-    QMessageBox, QScrollArea
+    QMessageBox, QScrollArea, QComboBox
 )
 from PySide6.QtCore import Qt
 
 from controllers.usuario_controller import UsuarioController
 from controllers.veiculo_controller import VeiculoController
-from controllers.rota_controller import RotaController
 from controllers.viagem_controller import ViagemController
 from controllers.custo_controller import CustoController
 
 
 usuario_controller = UsuarioController()
 veiculo_controller = VeiculoController()
-rota_controller = RotaController()
 viagem_controller = ViagemController()
 custo_controller = CustoController(veiculo_controller)
 
 
 STYLE = """
 QWidget {
-    background-color: #101014;
+    background-color: #0B0B0F;
     color: #FFFFFF;
     font-family: Arial;
 }
 
-QLineEdit {
-    background-color: #2A2A32;
-    border: 1px solid #33333D;
+QLabel {
+    background-color: transparent;
+    border: none;
+}
+
+QLineEdit, QComboBox {
+    background-color: #191A22;
+    border: 1px solid #2B2D38;
     border-radius: 16px;
     padding: 13px;
     color: white;
@@ -48,30 +51,140 @@ QPushButton {
 }
 
 QPushButton:hover {
-    background-color: #d01250;
+    background-color: #ff2a6d;
 }
 
 QFrame {
-    background-color: #1E1E24;
+    background-color: #15161D;
     border-radius: 24px;
 }
 
 QScrollArea {
     border: none;
+    background-color: #0B0B0F;
 }
 """
 
 
-def criar_titulo(texto):
-    titulo = QLabel(texto)
-    titulo.setStyleSheet("font-size: 24px; font-weight: bold; color: #FFFFFF;")
-    return titulo
+def titulo(texto):
+    label = QLabel(texto)
+    label.setStyleSheet("font-size: 28px; font-weight: bold; color: #FFFFFF;")
+    return label
 
 
-def criar_subtitulo(texto):
-    subtitulo = QLabel(texto)
-    subtitulo.setStyleSheet("font-size: 13px; color: #A0A0A8;")
-    return subtitulo
+def subtitulo(texto):
+    label = QLabel(texto)
+    label.setStyleSheet("font-size: 14px; color: #9CA3AF;")
+    return label
+
+
+def botao_secundario(texto):
+    btn = QPushButton(texto)
+    btn.setStyleSheet("""
+        QPushButton {
+            background-color: #191A22;
+            color: #D1D5DB;
+            border-radius: 16px;
+            padding: 12px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        QPushButton:hover {
+            background-color: #252733;
+            color: white;
+        }
+    """)
+    return btn
+
+
+def botao_filtro(texto, ativo):
+    btn = QPushButton(texto)
+
+    if ativo:
+        btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ED145B;
+                color: white;
+                border-radius: 18px;
+                padding: 10px;
+                font-size: 13px;
+                font-weight: bold;
+            }
+        """)
+    else:
+        btn.setStyleSheet("""
+            QPushButton {
+                background-color: #191A22;
+                color: #9CA3AF;
+                border-radius: 18px;
+                padding: 10px;
+                font-size: 13px;
+                font-weight: bold;
+            }
+
+            QPushButton:hover {
+                background-color: #252733;
+                color: white;
+            }
+        """)
+
+    return btn
+
+
+def criar_scroll():
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+
+    container = QWidget()
+    layout = QVBoxLayout()
+    layout.setContentsMargins(22, 24, 22, 24)
+    layout.setSpacing(18)
+
+    container.setLayout(layout)
+    scroll.setWidget(container)
+
+    return scroll, layout
+
+
+def criar_navbar(tela_atual, usuario, ativo):
+    nav = QHBoxLayout()
+    nav.setContentsMargins(14, 10, 14, 12)
+    nav.setSpacing(8)
+
+    def ir_dashboard():
+        tela_atual.close()
+        tela_atual.tela = Dashboard(usuario)
+        tela_atual.tela.show()
+
+    def ir_veiculos():
+        tela_atual.close()
+        tela_atual.tela = TelaVeiculos(usuario)
+        tela_atual.tela.show()
+
+    def ir_viagens():
+        tela_atual.close()
+        tela_atual.tela = TelaViagens(usuario)
+        tela_atual.tela.show()
+
+    def ir_custos():
+        tela_atual.close()
+        tela_atual.tela = PrevisaoCusto(usuario)
+        tela_atual.tela.show()
+
+    itens = [
+        ("Dashboard", "dashboard", ir_dashboard),
+        ("Veículos", "vehicles", ir_veiculos),
+        ("Viagens", "trips", ir_viagens),
+        ("Custos", "costs", ir_custos)
+    ]
+
+    for texto, key, funcao in itens:
+        btn = botao_filtro(texto, ativo == key)
+        btn.clicked.connect(funcao)
+        nav.addWidget(btn)
+
+    return nav
 
 
 class Login(QWidget):
@@ -81,19 +194,36 @@ class Login(QWidget):
         self.setFixedSize(390, 650)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(35, 45, 35, 35)
+        layout.setContentsMargins(34, 50, 34, 34)
         layout.setSpacing(18)
 
-        titulo = QLabel("FleetTrack FIAP")
-        titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 30px; font-weight: bold; color: #ED145B;")
+        logo = QLabel("FleetTrack")
+        logo.setAlignment(Qt.AlignCenter)
+        logo.setAttribute(Qt.WA_TranslucentBackground)
+        logo.setStyleSheet("""
+            QLabel {
+                background-color: transparent;
+                border: none;
+                font-size: 36px;
+                font-weight: bold;
+                color: #ED145B;
+            }
+        """)
 
-        subtitulo = QLabel("Gestão inteligente da frota institucional")
-        subtitulo.setAlignment(Qt.AlignCenter)
-        subtitulo.setStyleSheet("font-size: 13px; color: #A0A0A8;")
+        desc = QLabel("Gestão inteligente da frota FIAP")
+        desc.setAlignment(Qt.AlignCenter)
+        desc.setAttribute(Qt.WA_TranslucentBackground)
+        desc.setStyleSheet("""
+            QLabel {
+                background-color: transparent;
+                border: none;
+                font-size: 14px;
+                color: #9CA3AF;
+            }
+        """)
 
         self.email = QLineEdit()
-        self.email.setPlaceholderText("Email")
+        self.email.setPlaceholderText("E-mail")
 
         self.senha = QLineEdit()
         self.senha.setPlaceholderText("Senha")
@@ -102,12 +232,13 @@ class Login(QWidget):
         btn_login = QPushButton("Entrar")
         btn_login.clicked.connect(self.login)
 
-        btn_cadastro = QPushButton("Criar conta")
+        btn_cadastro = botao_secundario("Criar conta")
         btn_cadastro.clicked.connect(self.abrir_cadastro)
 
-        layout.addWidget(titulo)
-        layout.addWidget(subtitulo)
-        layout.addSpacing(45)
+        layout.addStretch()
+        layout.addWidget(logo)
+        layout.addWidget(desc)
+        layout.addSpacing(30)
         layout.addWidget(self.email)
         layout.addWidget(self.senha)
         layout.addWidget(btn_login)
@@ -121,15 +252,15 @@ class Login(QWidget):
 
         if usuario:
             self.close()
-            self.dashboard = Dashboard(usuario)
-            self.dashboard.show()
+            self.tela = Dashboard(usuario)
+            self.tela.show()
         else:
-            QMessageBox.warning(self, "Erro", "Email ou senha inválidos.")
+            QMessageBox.warning(self, "Erro", "E-mail ou senha inválidos.")
 
     def abrir_cadastro(self):
         self.close()
-        self.cadastro = Cadastro()
-        self.cadastro.show()
+        self.tela = Cadastro()
+        self.tela.show()
 
 
 class Cadastro(QWidget):
@@ -139,18 +270,17 @@ class Cadastro(QWidget):
         self.setFixedSize(390, 650)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(35, 45, 35, 35)
+        layout.setContentsMargins(34, 50, 34, 34)
         layout.setSpacing(18)
 
-        titulo = QLabel("Criar Conta")
-        titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 30px; font-weight: bold; color: #ED145B;")
+        header = titulo("Criar conta")
+        desc = subtitulo("Cadastre-se para acessar o FleetTrack")
 
         self.nome = QLineEdit()
         self.nome.setPlaceholderText("Nome completo")
 
         self.email = QLineEdit()
-        self.email.setPlaceholderText("Email")
+        self.email.setPlaceholderText("E-mail")
 
         self.senha = QLineEdit()
         self.senha.setPlaceholderText("Senha")
@@ -163,11 +293,12 @@ class Cadastro(QWidget):
         btn_cadastrar = QPushButton("Cadastrar")
         btn_cadastrar.clicked.connect(self.cadastrar)
 
-        btn_voltar = QPushButton("Voltar para login")
-        btn_voltar.clicked.connect(self.voltar_login)
+        btn_voltar = botao_secundario("Voltar para login")
+        btn_voltar.clicked.connect(self.voltar)
 
-        layout.addWidget(titulo)
-        layout.addSpacing(30)
+        layout.addWidget(header)
+        layout.addWidget(desc)
+        layout.addSpacing(20)
         layout.addWidget(self.nome)
         layout.addWidget(self.email)
         layout.addWidget(self.senha)
@@ -188,83 +319,93 @@ class Cadastro(QWidget):
 
         if sucesso:
             QMessageBox.information(self, "Sucesso", mensagem)
-            self.voltar_login()
+            self.voltar()
         else:
             QMessageBox.warning(self, "Erro", mensagem)
 
-    def voltar_login(self):
+    def voltar(self):
         self.close()
-        self.login = Login()
-        self.login.show()
+        self.tela = Login()
+        self.tela.show()
 
 
 class Dashboard(QWidget):
     def __init__(self, usuario):
         super().__init__()
         self.usuario = usuario
-        self.setWindowTitle("FleetTrack FIAP - Dashboard")
+        self.setWindowTitle("FleetTrack FIAP")
         self.setFixedSize(430, 780)
 
-        main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main = QVBoxLayout()
+        main.setContentsMargins(0, 0, 0, 0)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
+        scroll, layout = criar_scroll()
 
-        container = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(24, 24, 24, 20)
-        layout.setSpacing(20)
+        header = QFrame()
+        header_layout = QVBoxLayout()
+        header_layout.setContentsMargins(20, 18, 20, 18)
 
-        titulo = criar_titulo("FleetTrack FIAP")
-        saudacao = criar_subtitulo(f"Olá, {usuario.nome}!")
+        h1 = QLabel("FleetTrack FIAP")
+        h1.setStyleSheet("font-size: 28px; font-weight: bold; color: #FFFFFF;")
+
+        h2 = QLabel(f"Olá, {self.usuario.nome}! Controle sua frota com inteligência.")
+        h2.setWordWrap(True)
+        h2.setStyleSheet("font-size: 13px; color: #9CA3AF;")
+
+        header_layout.addWidget(h1)
+        header_layout.addWidget(h2)
+        header.setLayout(header_layout)
+
+        layout.addWidget(header)
+
+        total_veiculos = len(veiculo_controller.listar())
+        total_viagens = len(viagem_controller.listar())
+        total_manutencoes = len(custo_controller.listar())
+        total_custos = custo_controller.total_custos()
 
         grid = QGridLayout()
         grid.setSpacing(14)
 
-        grid.addWidget(self.card_estatistica("🚗", "Veículos cadastrados", str(len(veiculo_controller.listar())), "#ED145B"), 0, 0)
-        grid.addWidget(self.card_estatistica("📍", "Rotas cadastradas", str(len(rota_controller.listar())), "#7C3AED"), 0, 1)
-        grid.addWidget(self.card_estatistica("📅", "Viagens do dia", str(len(viagem_controller.listar())), "#06B6D4"), 1, 0)
-        grid.addWidget(self.card_estatistica("💰", "Custos do mês", f"R$ {custo_controller.total_custos():.2f}", "#F59E0B"), 1, 1)
+        grid.addWidget(self.card_dashboard("🚗", "Veículos", total_veiculos, "#ED145B"), 0, 0)
+        grid.addWidget(self.card_dashboard("🚌", "Viagens", total_viagens, "#06B6D4"), 0, 1)
+        grid.addWidget(self.card_dashboard("🛠️", "Manutenções", total_manutencoes, "#F59E0B"), 1, 0)
+        grid.addWidget(self.card_dashboard("💰", "Custos", f"R$ {total_custos:.2f}", "#7C3AED"), 1, 1)
 
-        layout.addWidget(titulo)
-        layout.addWidget(saudacao)
         layout.addLayout(grid)
-
-        layout.addWidget(self.card_proximas_viagens())
-        layout.addWidget(self.card_custos_categoria())
 
         btn_veiculo = QPushButton("Cadastrar Veículo")
         btn_veiculo.clicked.connect(self.abrir_cadastro_veiculo)
 
-        btn_rota = QPushButton("Cadastrar Rota")
-        btn_rota.clicked.connect(self.abrir_cadastro_rota)
+        btn_viagem = QPushButton("Cadastrar Viagem")
+        btn_viagem.clicked.connect(self.abrir_cadastro_viagem)
 
         btn_manutencao = QPushButton("Cadastrar Manutenção")
         btn_manutencao.clicked.connect(self.abrir_cadastro_manutencao)
 
-        btn_historico = QPushButton("Histórico Geral")
-        btn_historico.clicked.connect(self.abrir_historico)
+        btn_previsao = QPushButton("Previsão de Custo")
+        btn_previsao.clicked.connect(self.abrir_previsao)
+
+        btn_logout = botao_secundario("Sair da Conta")
+        btn_logout.clicked.connect(self.logout)
 
         layout.addWidget(btn_veiculo)
-        layout.addWidget(btn_rota)
+        layout.addWidget(btn_viagem)
         layout.addWidget(btn_manutencao)
-        layout.addWidget(btn_historico)
+        layout.addWidget(btn_previsao)
+        layout.addWidget(btn_logout)
+        layout.addStretch()
 
-        container.setLayout(layout)
-        scroll.setWidget(container)
+        main.addWidget(scroll)
+        main.addLayout(criar_navbar(self, self.usuario, "dashboard"))
 
-        main_layout.addWidget(scroll)
-        main_layout.addLayout(self.navbar())
+        self.setLayout(main)
 
-        self.setLayout(main_layout)
-
-    def card_estatistica(self, icone, label, valor, cor):
-        frame = QFrame()
-        frame.setFixedSize(175, 145)
+    def card_dashboard(self, icone, texto, valor, cor):
+        card = QFrame()
+        card.setFixedSize(175, 135)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(8)
 
         icon = QLabel(icone)
@@ -272,178 +413,27 @@ class Dashboard(QWidget):
         icon.setFixedSize(46, 46)
         icon.setStyleSheet(f"background-color: {cor}; border-radius: 16px; font-size: 22px;")
 
-        valor_label = QLabel(valor)
-        valor_label.setStyleSheet("font-size: 22px; font-weight: bold; color: #FFFFFF;")
+        value = QLabel(str(valor))
+        value.setStyleSheet("font-size: 24px; font-weight: bold; color: #FFFFFF;")
 
-        label_widget = QLabel(label)
-        label_widget.setWordWrap(True)
-        label_widget.setStyleSheet("font-size: 12px; color: #A0A0A8;")
+        label = QLabel(texto)
+        label.setStyleSheet("font-size: 12px; color: #9CA3AF;")
 
         layout.addWidget(icon)
-        layout.addWidget(valor_label)
-        layout.addWidget(label_widget)
+        layout.addWidget(value)
+        layout.addWidget(label)
 
-        frame.setLayout(layout)
-        return frame
-
-    def card_proximas_viagens(self):
-        frame = QFrame()
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(18, 18, 18, 18)
-        layout.setSpacing(14)
-
-        titulo = QLabel("Próximas Viagens")
-        titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #FFFFFF;")
-        layout.addWidget(titulo)
-
-        viagens = viagem_controller.listar()
-
-        if not viagens:
-            vazio = QLabel("Nenhuma viagem cadastrada.")
-            vazio.setStyleSheet("font-size: 13px; color: #A0A0A8;")
-            layout.addWidget(vazio)
-        else:
-            for viagem in viagens:
-                item = QFrame()
-                item.setStyleSheet("background-color: #2A2A32; border-radius: 18px;")
-
-                item_layout = QVBoxLayout()
-                item_layout.setContentsMargins(14, 12, 14, 12)
-
-                linha1 = QLabel(f"📍 {viagem.rota.origem} → {viagem.rota.destino}")
-                linha1.setStyleSheet("font-size: 13px; color: #FFFFFF;")
-
-                linha2 = QLabel(
-                    f"{viagem.veiculo.modelo} • "
-                    f"Custo previsto: R$ {viagem.custo_previsto:.2f}"
-                )
-                linha2.setStyleSheet("font-size: 12px; color: #A0A0A8;")
-
-                item_layout.addWidget(linha1)
-                item_layout.addWidget(linha2)
-                item.setLayout(item_layout)
-
-                layout.addWidget(item)
-
-        frame.setLayout(layout)
-        return frame
-
-    def card_custos_categoria(self):
-        frame = QFrame()
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(18, 18, 18, 18)
-        layout.setSpacing(14)
-
-        titulo = QLabel("Custos por Categoria")
-        titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #FFFFFF;")
-        layout.addWidget(titulo)
-
-        total_manutencao = custo_controller.total_custos()
-        previsoes = viagem_controller.listar_historico_previsoes()
-
-        total_combustivel = 0
-        total_outros = 0
-
-        for previsao in previsoes:
-            total_combustivel += previsao.get("custo_combustivel", 0)
-
-        total_geral = total_combustivel + total_manutencao + total_outros
-
-        if total_geral == 0:
-            vazio = QLabel("Nenhum custo cadastrado.")
-            vazio.setStyleSheet("font-size: 13px; color: #A0A0A8;")
-            layout.addWidget(vazio)
-        else:
-            dados = [
-                ("Combustível", total_combustivel, "#ED145B"),
-                ("Manutenção", total_manutencao, "#7C3AED"),
-                ("Outros", total_outros, "#06B6D4")
-            ]
-
-            for categoria, valor, cor in dados:
-                porcentagem = 0
-
-                if total_geral > 0:
-                    porcentagem = int((valor / total_geral) * 100)
-
-                linha = QLabel(f"{categoria} — R$ {valor:.2f}")
-                linha.setStyleSheet("font-size: 13px; color: #FFFFFF;")
-
-                barra_fundo = QFrame()
-                barra_fundo.setFixedHeight(12)
-                barra_fundo.setStyleSheet("background-color: #2A2A32; border-radius: 6px;")
-
-                barra_layout = QHBoxLayout()
-                barra_layout.setContentsMargins(0, 0, 0, 0)
-
-                barra = QFrame()
-
-                if valor == 0:
-                    barra.setFixedWidth(0)
-                else:
-                    barra.setFixedWidth(max(8, int(320 * porcentagem / 100)))
-
-                barra.setFixedHeight(12)
-                barra.setStyleSheet(f"background-color: {cor}; border-radius: 6px;")
-
-                barra_layout.addWidget(barra)
-                barra_layout.addStretch()
-                barra_fundo.setLayout(barra_layout)
-
-                layout.addWidget(linha)
-                layout.addWidget(barra_fundo)
-
-        frame.setLayout(layout)
-        return frame
-
-    def navbar(self):
-        nav = QHBoxLayout()
-        nav.setContentsMargins(18, 10, 18, 12)
-        nav.setSpacing(8)
-
-        botoes = [
-            ("Dashboard", self.recarregar_dashboard),
-            ("Veículos", self.abrir_lista_veiculos),
-            ("Rotas", self.abrir_lista_rotas),
-            ("Custos", self.abrir_previsao)
-        ]
-
-        for texto, funcao in botoes:
-            botao = QPushButton(texto)
-            botao.setStyleSheet("""
-                QPushButton {
-                    background-color: #1E1E24;
-                    color: #A0A0A8;
-                    border-radius: 16px;
-                    padding: 10px;
-                    font-size: 11px;
-                }
-
-                QPushButton:hover {
-                    background-color: #ED145B;
-                    color: white;
-                }
-            """)
-            botao.clicked.connect(funcao)
-            nav.addWidget(botao)
-
-        return nav
-
-    def recarregar_dashboard(self):
-        self.close()
-        self.tela = Dashboard(self.usuario)
-        self.tela.show()
+        card.setLayout(layout)
+        return card
 
     def abrir_cadastro_veiculo(self):
         self.close()
         self.tela = CadastroVeiculo(self.usuario)
         self.tela.show()
 
-    def abrir_cadastro_rota(self):
+    def abrir_cadastro_viagem(self):
         self.close()
-        self.tela = CadastroRota(self.usuario)
+        self.tela = CadastroViagem(self.usuario)
         self.tela.show()
 
     def abrir_cadastro_manutencao(self):
@@ -451,24 +441,341 @@ class Dashboard(QWidget):
         self.tela = CadastroManutencao(self.usuario)
         self.tela.show()
 
-    def abrir_lista_veiculos(self):
-        self.close()
-        self.tela = ListaVeiculos(self.usuario)
-        self.tela.show()
-
-    def abrir_lista_rotas(self):
-        self.close()
-        self.tela = ListaRotas(self.usuario)
-        self.tela.show()
-
     def abrir_previsao(self):
         self.close()
         self.tela = PrevisaoCusto(self.usuario)
         self.tela.show()
 
-    def abrir_historico(self):
+    def logout(self):
         self.close()
-        self.tela = HistoricoGeral(self.usuario)
+        self.tela = Login()
+        self.tela.show()
+
+
+class TelaVeiculos(QWidget):
+    def __init__(self, usuario, filtro="all"):
+        super().__init__()
+        self.usuario = usuario
+        self.filtro = filtro
+        self.setWindowTitle("Veículos")
+        self.setFixedSize(430, 780)
+        self.montar()
+
+    def montar(self):
+        main = QVBoxLayout()
+        main.setContentsMargins(0, 0, 0, 0)
+
+        scroll, layout = criar_scroll()
+
+        layout.addWidget(titulo("Veículos"))
+        layout.addWidget(subtitulo("Gestão da frota institucional"))
+
+        veiculos = veiculo_controller.listar()
+
+        total = len(veiculos)
+        ativos = len([v for v in veiculos if v.status == "active"])
+        manutencao = len([v for v in veiculos if v.status == "maintenance"])
+
+        stats = QGridLayout()
+        stats.setSpacing(10)
+        stats.addWidget(self.card_resumo(total, "Total", "#FFFFFF"), 0, 0)
+        stats.addWidget(self.card_resumo(ativos, "Ativos", "#10B981"), 0, 1)
+        stats.addWidget(self.card_resumo(manutencao, "Manutenção", "#F59E0B"), 0, 2)
+
+        layout.addLayout(stats)
+        layout.addLayout(self.filtros())
+
+        if self.filtro == "all":
+            filtrados = veiculos
+        else:
+            filtrados = [v for v in veiculos if v.status == self.filtro]
+
+        if not filtrados:
+            layout.addWidget(subtitulo("Nenhum veículo encontrado."))
+        else:
+            for veiculo in filtrados:
+                layout.addWidget(self.card_veiculo(veiculo))
+
+        btn = QPushButton("Adicionar Novo Veículo")
+        btn.clicked.connect(self.abrir_cadastro)
+        layout.addWidget(btn)
+        layout.addStretch()
+
+        main.addWidget(scroll)
+        main.addLayout(criar_navbar(self, self.usuario, "vehicles"))
+
+        self.setLayout(main)
+
+    def card_resumo(self, valor, texto, cor):
+        card = QFrame()
+        card.setFixedSize(116, 82)
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(8, 8, 8, 8)
+
+        v = QLabel(str(valor))
+        v.setAlignment(Qt.AlignCenter)
+        v.setStyleSheet(f"font-size: 22px; font-weight: bold; color: {cor};")
+
+        t = QLabel(texto)
+        t.setAlignment(Qt.AlignCenter)
+        t.setStyleSheet("font-size: 11px; color: #9CA3AF;")
+
+        layout.addWidget(v)
+        layout.addWidget(t)
+
+        card.setLayout(layout)
+        return card
+
+    def filtros(self):
+        layout = QHBoxLayout()
+        layout.setSpacing(8)
+
+        botoes = [
+            ("Todos", "all"),
+            ("Ativos", "active"),
+            ("Manutenção", "maintenance")
+        ]
+
+        for texto, filtro in botoes:
+            btn = botao_filtro(texto, self.filtro == filtro)
+            btn.clicked.connect(lambda checked=False, f=filtro: self.trocar_filtro(f))
+            layout.addWidget(btn)
+
+        return layout
+
+    def trocar_filtro(self, filtro):
+        self.close()
+        self.tela = TelaVeiculos(self.usuario, filtro)
+        self.tela.show()
+
+    def card_veiculo(self, v):
+        card = QFrame()
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(14)
+
+        topo = QHBoxLayout()
+
+        nome = QLabel(f"{v.modelo}\n{v.placa}")
+        nome.setStyleSheet("font-size: 16px; font-weight: bold; color: #FFFFFF;")
+
+        status_texto = "Ativo" if v.status == "active" else "Manutenção"
+        status_cor = "#10B981" if v.status == "active" else "#F59E0B"
+
+        status = QLabel(status_texto)
+        status.setAlignment(Qt.AlignCenter)
+        status.setStyleSheet(f"background-color: {status_cor}; border-radius: 12px; padding: 6px; font-size: 11px;")
+
+        topo.addWidget(nome)
+        topo.addStretch()
+        topo.addWidget(status)
+
+        grid = QGridLayout()
+        grid.setSpacing(10)
+
+        grid.addWidget(self.info("📈", "Quilometragem", f"{v.quilometragem} km"), 0, 0)
+        grid.addWidget(self.info("⛽", "Consumo", f"{v.consumo} km/l"), 0, 1)
+        grid.addWidget(self.info("🛠️", "Próx. manutenção", f"{v.proxima_manutencao} km"), 1, 0)
+        grid.addWidget(self.info("⛽", "Combustível", f"{v.combustivel}%"), 1, 1)
+
+        layout.addLayout(topo)
+        layout.addLayout(grid)
+
+        card.setLayout(layout)
+        return card
+
+    def info(self, icone, texto, valor):
+        card = QFrame()
+        card.setStyleSheet("background-color: #20222D; border-radius: 18px;")
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
+
+        label = QLabel(f"{icone} {texto}")
+        label.setStyleSheet("font-size: 11px; color: #9CA3AF;")
+
+        value = QLabel(valor)
+        value.setStyleSheet("font-size: 13px; font-weight: bold; color: #FFFFFF;")
+
+        layout.addWidget(label)
+        layout.addWidget(value)
+
+        card.setLayout(layout)
+        return card
+
+    def abrir_cadastro(self):
+        self.close()
+        self.tela = CadastroVeiculo(self.usuario)
+        self.tela.show()
+
+
+class TelaViagens(QWidget):
+    def __init__(self, usuario, filtro="all"):
+        super().__init__()
+        self.usuario = usuario
+        self.filtro = filtro
+        self.setWindowTitle("Viagens")
+        self.setFixedSize(430, 780)
+        self.montar()
+
+    def montar(self):
+        main = QVBoxLayout()
+        main.setContentsMargins(0, 0, 0, 0)
+
+        scroll, layout = criar_scroll()
+
+        layout.addWidget(titulo("Viagens"))
+        layout.addWidget(subtitulo("Histórico e agendamento de rotas"))
+
+        viagens = viagem_controller.listar()
+
+        total = len(viagens)
+        agendadas = len([v for v in viagens if v.status == "scheduled"])
+        andamento = len([v for v in viagens if v.status == "in-progress"])
+        concluidas = len([v for v in viagens if v.status == "completed"])
+
+        stats = QGridLayout()
+        stats.setSpacing(8)
+        stats.addWidget(self.card_resumo(total, "Total", "#FFFFFF"), 0, 0)
+        stats.addWidget(self.card_resumo(agendadas, "Agendadas", "#06B6D4"), 0, 1)
+        stats.addWidget(self.card_resumo(andamento, "Em curso", "#F59E0B"), 0, 2)
+        stats.addWidget(self.card_resumo(concluidas, "Concluídas", "#10B981"), 0, 3)
+
+        layout.addLayout(stats)
+        layout.addLayout(self.filtros())
+
+        if self.filtro == "all":
+            filtradas = viagens
+        else:
+            filtradas = [v for v in viagens if v.status == self.filtro]
+
+        if not filtradas:
+            layout.addWidget(subtitulo("Nenhuma viagem encontrada."))
+        else:
+            for viagem in filtradas:
+                layout.addWidget(self.card_viagem(viagem))
+
+        btn = QPushButton("Agendar Nova Viagem")
+        btn.clicked.connect(self.abrir_cadastro)
+        layout.addWidget(btn)
+        layout.addStretch()
+
+        main.addWidget(scroll)
+        main.addLayout(criar_navbar(self, self.usuario, "trips"))
+
+        self.setLayout(main)
+
+    def card_resumo(self, valor, texto, cor):
+        card = QFrame()
+        card.setFixedSize(82, 80)
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(6, 6, 6, 6)
+
+        v = QLabel(str(valor))
+        v.setAlignment(Qt.AlignCenter)
+        v.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {cor};")
+
+        t = QLabel(texto)
+        t.setAlignment(Qt.AlignCenter)
+        t.setWordWrap(True)
+        t.setStyleSheet("font-size: 9px; color: #9CA3AF;")
+
+        layout.addWidget(v)
+        layout.addWidget(t)
+
+        card.setLayout(layout)
+        return card
+
+    def filtros(self):
+        layout = QHBoxLayout()
+        layout.setSpacing(8)
+
+        botoes = [
+            ("Todas", "all"),
+            ("Agendadas", "scheduled"),
+            ("Em andamento", "in-progress"),
+            ("Concluídas", "completed")
+        ]
+
+        for texto, filtro in botoes:
+            btn = botao_filtro(texto, self.filtro == filtro)
+            btn.clicked.connect(lambda checked=False, f=filtro: self.trocar_filtro(f))
+            layout.addWidget(btn)
+
+        return layout
+
+    def trocar_filtro(self, filtro):
+        self.close()
+        self.tela = TelaViagens(self.usuario, filtro)
+        self.tela.show()
+
+    def card_viagem(self, v):
+        card = QFrame()
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(14)
+
+        status_map = {
+            "scheduled": ("Agendada", "#06B6D4"),
+            "in-progress": ("Em andamento", "#F59E0B"),
+            "completed": ("Concluída", "#10B981")
+        }
+
+        texto_status, cor_status = status_map.get(v.status, ("Agendada", "#06B6D4"))
+
+        topo = QHBoxLayout()
+
+        rota = QLabel(f"{v.origem} → {v.destino}\n{v.distancia} km")
+        rota.setStyleSheet("font-size: 16px; font-weight: bold; color: #FFFFFF;")
+
+        status = QLabel(texto_status)
+        status.setAlignment(Qt.AlignCenter)
+        status.setStyleSheet(f"background-color: {cor_status}; border-radius: 12px; padding: 6px; font-size: 11px;")
+
+        topo.addWidget(rota)
+        topo.addStretch()
+        topo.addWidget(status)
+
+        grid = QGridLayout()
+        grid.setSpacing(10)
+
+        grid.addWidget(self.info("📅", "Data", v.data), 0, 0)
+        grid.addWidget(self.info("⏰", "Horário", v.horario), 0, 1)
+        grid.addWidget(self.info("👤", "Motorista", v.motorista), 1, 0)
+        grid.addWidget(self.info("🚗", "Veículo", f"{v.veiculo_modelo}\n{v.veiculo_placa}"), 1, 1)
+
+        layout.addLayout(topo)
+        layout.addLayout(grid)
+
+        card.setLayout(layout)
+        return card
+
+    def info(self, icone, texto, valor):
+        card = QFrame()
+        card.setStyleSheet("background-color: #20222D; border-radius: 18px;")
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
+
+        label = QLabel(f"{icone} {texto}")
+        label.setStyleSheet("font-size: 11px; color: #9CA3AF;")
+
+        value = QLabel(str(valor))
+        value.setStyleSheet("font-size: 13px; font-weight: bold; color: #FFFFFF;")
+
+        layout.addWidget(label)
+        layout.addWidget(value)
+
+        card.setLayout(layout)
+        return card
+
+    def abrir_cadastro(self):
+        self.close()
+        self.tela = CadastroViagem(self.usuario)
         self.tela.show()
 
 
@@ -477,14 +784,14 @@ class CadastroVeiculo(QWidget):
         super().__init__()
         self.usuario = usuario
         self.setWindowTitle("Cadastrar Veículo")
-        self.setFixedSize(390, 650)
+        self.setFixedSize(390, 740)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(35, 35, 35, 35)
-        layout.setSpacing(15)
+        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(12)
 
-        layout.addWidget(criar_titulo("Cadastrar Veículo"))
-        layout.addWidget(criar_subtitulo("Adicione um veículo institucional da FIAP."))
+        layout.addWidget(titulo("Novo Veículo"))
+        layout.addWidget(subtitulo("O status inicial será Ativo."))
 
         self.placa = QLineEdit()
         self.placa.setPlaceholderText("Placa")
@@ -493,28 +800,40 @@ class CadastroVeiculo(QWidget):
         self.modelo.setPlaceholderText("Modelo")
 
         self.tipo = QLineEdit()
-        self.tipo.setPlaceholderText("Tipo: carro, van ou ônibus")
+        self.tipo.setPlaceholderText("Tipo")
 
         self.capacidade = QLineEdit()
         self.capacidade.setPlaceholderText("Capacidade")
 
         self.consumo = QLineEdit()
-        self.consumo.setPlaceholderText("Consumo médio km/l")
+        self.consumo.setPlaceholderText("Consumo km/l")
+
+        self.quilometragem = QLineEdit()
+        self.quilometragem.setPlaceholderText("Quilometragem atual")
+
+        self.proxima_manutencao = QLineEdit()
+        self.proxima_manutencao.setPlaceholderText("Próxima manutenção em km")
+
+        self.combustivel = QLineEdit()
+        self.combustivel.setPlaceholderText("Combustível (%)")
+
+        campos = [
+            self.placa, self.modelo, self.tipo, self.capacidade,
+            self.consumo, self.quilometragem, self.proxima_manutencao,
+            self.combustivel
+        ]
+
+        for campo in campos:
+            layout.addWidget(campo)
 
         btn_salvar = QPushButton("Salvar Veículo")
         btn_salvar.clicked.connect(self.salvar)
 
-        btn_voltar = QPushButton("Voltar")
+        btn_voltar = botao_secundario("Voltar")
         btn_voltar.clicked.connect(self.voltar)
 
-        layout.addWidget(self.placa)
-        layout.addWidget(self.modelo)
-        layout.addWidget(self.tipo)
-        layout.addWidget(self.capacidade)
-        layout.addWidget(self.consumo)
         layout.addWidget(btn_salvar)
         layout.addWidget(btn_voltar)
-        layout.addStretch()
 
         self.setLayout(layout)
 
@@ -524,7 +843,10 @@ class CadastroVeiculo(QWidget):
             self.modelo.text(),
             self.tipo.text(),
             self.capacidade.text(),
-            self.consumo.text()
+            self.consumo.text(),
+            self.quilometragem.text(),
+            self.proxima_manutencao.text(),
+            self.combustivel.text()
         )
 
         if sucesso:
@@ -535,23 +857,23 @@ class CadastroVeiculo(QWidget):
 
     def voltar(self):
         self.close()
-        self.dashboard = Dashboard(self.usuario)
-        self.dashboard.show()
+        self.tela = TelaVeiculos(self.usuario)
+        self.tela.show()
 
 
-class CadastroRota(QWidget):
+class CadastroViagem(QWidget):
     def __init__(self, usuario):
         super().__init__()
         self.usuario = usuario
-        self.setWindowTitle("Cadastrar Rota")
-        self.setFixedSize(390, 600)
+        self.setWindowTitle("Cadastrar Viagem")
+        self.setFixedSize(390, 760)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(35, 35, 35, 35)
-        layout.setSpacing(15)
+        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(12)
 
-        layout.addWidget(criar_titulo("Cadastrar Rota"))
-        layout.addWidget(criar_subtitulo("Registre uma rota usada pela frota."))
+        layout.addWidget(titulo("Nova Viagem"))
+        layout.addWidget(subtitulo("Agende uma nova rota da frota."))
 
         self.origem = QLineEdit()
         self.origem.setPlaceholderText("Origem")
@@ -562,26 +884,66 @@ class CadastroRota(QWidget):
         self.distancia = QLineEdit()
         self.distancia.setPlaceholderText("Distância em km")
 
-        btn_salvar = QPushButton("Salvar Rota")
+        self.data = QLineEdit()
+        self.data.setPlaceholderText("Data")
+
+        self.horario = QLineEdit()
+        self.horario.setPlaceholderText("Horário")
+
+        self.motorista = QLineEdit()
+        self.motorista.setPlaceholderText("Motorista")
+
+        self.veiculo_combo = QComboBox()
+
+        veiculos = veiculo_controller.listar()
+
+        for i, veiculo in enumerate(veiculos):
+            self.veiculo_combo.addItem(f"{i} - {veiculo.modelo} | {veiculo.placa}", i)
+
+        self.status = QComboBox()
+        self.status.addItem("Agendada", "scheduled")
+        self.status.addItem("Em andamento", "in-progress")
+        self.status.addItem("Concluída", "completed")
+
+        campos = [
+            self.origem, self.destino, self.distancia, self.data,
+            self.horario, self.motorista
+        ]
+
+        for campo in campos:
+            layout.addWidget(campo)
+
+        layout.addWidget(self.veiculo_combo)
+        layout.addWidget(self.status)
+
+        btn_salvar = QPushButton("Salvar Viagem")
         btn_salvar.clicked.connect(self.salvar)
 
-        btn_voltar = QPushButton("Voltar")
+        btn_voltar = botao_secundario("Voltar")
         btn_voltar.clicked.connect(self.voltar)
 
-        layout.addWidget(self.origem)
-        layout.addWidget(self.destino)
-        layout.addWidget(self.distancia)
         layout.addWidget(btn_salvar)
         layout.addWidget(btn_voltar)
-        layout.addStretch()
 
         self.setLayout(layout)
 
     def salvar(self):
-        sucesso, mensagem = rota_controller.cadastrar(
+        if len(veiculo_controller.listar()) == 0:
+            QMessageBox.warning(self, "Erro", "Cadastre um veículo primeiro.")
+            return
+
+        indice = self.veiculo_combo.currentData()
+        veiculo = veiculo_controller.buscar_por_indice(indice)
+
+        sucesso, mensagem = viagem_controller.cadastrar_viagem(
             self.origem.text(),
             self.destino.text(),
-            self.distancia.text()
+            self.distancia.text(),
+            self.data.text(),
+            self.horario.text(),
+            self.motorista.text(),
+            veiculo,
+            self.status.currentData()
         )
 
         if sucesso:
@@ -592,8 +954,8 @@ class CadastroRota(QWidget):
 
     def voltar(self):
         self.close()
-        self.dashboard = Dashboard(self.usuario)
-        self.dashboard.show()
+        self.tela = TelaViagens(self.usuario)
+        self.tela.show()
 
 
 class CadastroManutencao(QWidget):
@@ -604,188 +966,74 @@ class CadastroManutencao(QWidget):
         self.setFixedSize(390, 700)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(35, 35, 35, 35)
-        layout.setSpacing(15)
+        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(12)
 
-        layout.addWidget(criar_titulo("Cadastrar Manutenção"))
-        layout.addWidget(criar_subtitulo("Registre custos reais de manutenção."))
+        layout.addWidget(titulo("Nova Manutenção"))
+        layout.addWidget(subtitulo("O veículo será marcado como Em manutenção."))
 
-        self.indice_veiculo = QLineEdit()
-        self.indice_veiculo.setPlaceholderText("Índice do veículo")
+        self.veiculo_combo = QComboBox()
 
-        self.tipo_manutencao = QLineEdit()
-        self.tipo_manutencao.setPlaceholderText("Tipo: preventiva, corretiva, revisão")
+        veiculos = veiculo_controller.listar()
+
+        for i, veiculo in enumerate(veiculos):
+            self.veiculo_combo.addItem(f"{i} - {veiculo.modelo} | {veiculo.placa}", i)
+
+        self.tipo = QLineEdit()
+        self.tipo.setPlaceholderText("Tipo de manutenção")
 
         self.descricao = QLineEdit()
-        self.descricao.setPlaceholderText("Descrição da manutenção")
+        self.descricao.setPlaceholderText("Descrição")
 
         self.valor = QLineEdit()
-        self.valor.setPlaceholderText("Valor da manutenção")
+        self.valor.setPlaceholderText("Valor")
 
         self.data = QLineEdit()
-        self.data.setPlaceholderText("Data da manutenção")
+        self.data.setPlaceholderText("Data")
 
-        lista = QLabel(self.gerar_lista_veiculos())
-        lista.setStyleSheet("font-size: 12px; color: #A0A0A8;")
-        lista.setWordWrap(True)
+        layout.addWidget(self.veiculo_combo)
+        layout.addWidget(self.tipo)
+        layout.addWidget(self.descricao)
+        layout.addWidget(self.valor)
+        layout.addWidget(self.data)
 
         btn_salvar = QPushButton("Salvar Manutenção")
         btn_salvar.clicked.connect(self.salvar)
 
-        btn_voltar = QPushButton("Voltar")
+        btn_voltar = botao_secundario("Voltar")
         btn_voltar.clicked.connect(self.voltar)
 
-        layout.addWidget(lista)
-        layout.addWidget(self.indice_veiculo)
-        layout.addWidget(self.tipo_manutencao)
-        layout.addWidget(self.descricao)
-        layout.addWidget(self.valor)
-        layout.addWidget(self.data)
         layout.addWidget(btn_salvar)
         layout.addWidget(btn_voltar)
-        layout.addStretch()
 
         self.setLayout(layout)
-
-    def gerar_lista_veiculos(self):
-        veiculos = veiculo_controller.listar()
-
-        if not veiculos:
-            return "Nenhum veículo cadastrado. Cadastre um veículo antes."
-
-        texto = "Veículos disponíveis:\n"
-
-        for i, veiculo in enumerate(veiculos):
-            texto += f"{i} - {veiculo.modelo} | {veiculo.placa}\n"
-
-        return texto
 
     def salvar(self):
-        try:
-            indice = int(self.indice_veiculo.text())
-            veiculo = veiculo_controller.listar()[indice]
+        if len(veiculo_controller.listar()) == 0:
+            QMessageBox.warning(self, "Erro", "Cadastre um veículo primeiro.")
+            return
 
-            sucesso, mensagem = custo_controller.adicionar(
-                veiculo,
-                self.tipo_manutencao.text(),
-                self.descricao.text(),
-                self.valor.text(),
-                self.data.text()
-            )
+        indice = self.veiculo_combo.currentData()
+        veiculo = veiculo_controller.buscar_por_indice(indice)
 
-            if sucesso:
-                QMessageBox.information(self, "Sucesso", mensagem)
-                self.voltar()
-            else:
-                QMessageBox.warning(self, "Erro", mensagem)
+        sucesso, mensagem = custo_controller.adicionar(
+            veiculo,
+            self.tipo.text(),
+            self.descricao.text(),
+            self.valor.text(),
+            self.data.text()
+        )
 
-        except Exception:
-            QMessageBox.warning(self, "Erro", "Selecione um índice de veículo válido.")
-
-    def voltar(self):
-        self.close()
-        self.dashboard = Dashboard(self.usuario)
-        self.dashboard.show()
-
-
-class ListaVeiculos(QWidget):
-    def __init__(self, usuario):
-        super().__init__()
-        self.usuario = usuario
-        self.setWindowTitle("Veículos Cadastrados")
-        self.setFixedSize(430, 720)
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(25, 30, 25, 25)
-        layout.setSpacing(15)
-
-        layout.addWidget(criar_titulo("Veículos Cadastrados"))
-
-        veiculos = veiculo_controller.listar()
-
-        if not veiculos:
-            vazio = criar_subtitulo("Nenhum veículo cadastrado.")
-            layout.addWidget(vazio)
+        if sucesso:
+            QMessageBox.information(self, "Sucesso", mensagem)
+            self.voltar()
         else:
-            for veiculo in veiculos:
-                card = QFrame()
-                card_layout = QVBoxLayout()
-
-                texto = QLabel(
-                    f"Placa: {veiculo.placa}\n"
-                    f"Modelo: {veiculo.modelo}\n"
-                    f"Tipo: {veiculo.tipo}\n"
-                    f"Capacidade: {veiculo.capacidade}\n"
-                    f"Consumo: {veiculo.consumo} km/l"
-                )
-
-                texto.setStyleSheet("font-size: 13px; color: #FFFFFF;")
-                card_layout.addWidget(texto)
-                card.setLayout(card_layout)
-
-                layout.addWidget(card)
-
-        btn_voltar = QPushButton("Voltar")
-        btn_voltar.clicked.connect(self.voltar)
-
-        layout.addWidget(btn_voltar)
-        layout.addStretch()
-
-        self.setLayout(layout)
+            QMessageBox.warning(self, "Erro", mensagem)
 
     def voltar(self):
         self.close()
-        self.dashboard = Dashboard(self.usuario)
-        self.dashboard.show()
-
-
-class ListaRotas(QWidget):
-    def __init__(self, usuario):
-        super().__init__()
-        self.usuario = usuario
-        self.setWindowTitle("Rotas Cadastradas")
-        self.setFixedSize(430, 720)
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(25, 30, 25, 25)
-        layout.setSpacing(15)
-
-        layout.addWidget(criar_titulo("Rotas Cadastradas"))
-
-        rotas = rota_controller.listar()
-
-        if not rotas:
-            vazio = criar_subtitulo("Nenhuma rota cadastrada.")
-            layout.addWidget(vazio)
-        else:
-            for rota in rotas:
-                card = QFrame()
-                card_layout = QVBoxLayout()
-
-                texto = QLabel(
-                    f"Origem: {rota.origem}\n"
-                    f"Destino: {rota.destino}\n"
-                    f"Distância: {rota.distancia} km"
-                )
-
-                texto.setStyleSheet("font-size: 13px; color: #FFFFFF;")
-                card_layout.addWidget(texto)
-                card.setLayout(card_layout)
-
-                layout.addWidget(card)
-
-        btn_voltar = QPushButton("Voltar")
-        btn_voltar.clicked.connect(self.voltar)
-
-        layout.addWidget(btn_voltar)
-        layout.addStretch()
-
-        self.setLayout(layout)
-
-    def voltar(self):
-        self.close()
-        self.dashboard = Dashboard(self.usuario)
-        self.dashboard.show()
+        self.tela = TelaVeiculos(self.usuario)
+        self.tela.show()
 
 
 class PrevisaoCusto(QWidget):
@@ -795,86 +1043,47 @@ class PrevisaoCusto(QWidget):
         self.setWindowTitle("Previsão de Custo")
         self.setFixedSize(430, 780)
 
-        main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(24, 24, 24, 20)
-        main_layout.setSpacing(18)
+        main = QVBoxLayout()
+        main.setContentsMargins(26, 26, 26, 26)
+        main.setSpacing(16)
 
-        main_layout.addWidget(criar_titulo("Previsão de Custo"))
-        main_layout.addWidget(criar_subtitulo("Simulação inteligente de custos de viagem"))
-
-        card_inputs = QFrame()
-        inputs_layout = QVBoxLayout()
-        inputs_layout.setContentsMargins(18, 18, 18, 18)
-        inputs_layout.setSpacing(14)
+        main.addWidget(titulo("Previsão de Custo"))
+        main.addWidget(subtitulo("Simule o custo estimado de uma viagem."))
 
         self.distancia = QLineEdit()
         self.distancia.setPlaceholderText("Distância da viagem (km)")
 
         self.consumo = QLineEdit()
-        self.consumo.setPlaceholderText("Consumo médio do veículo (km/l)")
+        self.consumo.setPlaceholderText("Consumo médio (km/l)")
 
         self.preco = QLineEdit()
-        self.preco.setPlaceholderText("Preço do combustível (R$/l)")
+        self.preco.setPlaceholderText("Preço do combustível")
 
         self.fator = QLineEdit()
         self.fator.setPlaceholderText("Fator de manutenção (%)")
 
-        inputs_layout.addWidget(QLabel("Distância da viagem (km)"))
-        inputs_layout.addWidget(self.distancia)
-        inputs_layout.addWidget(QLabel("Consumo médio do veículo (km/l)"))
-        inputs_layout.addWidget(self.consumo)
-        inputs_layout.addWidget(QLabel("Preço do combustível (R$/l)"))
-        inputs_layout.addWidget(self.preco)
-        inputs_layout.addWidget(QLabel("Fator de manutenção (%)"))
-        inputs_layout.addWidget(self.fator)
+        for campo in [self.distancia, self.consumo, self.preco, self.fator]:
+            main.addWidget(campo)
 
-        card_inputs.setLayout(inputs_layout)
-
-        btn_calcular = QPushButton("🧮 Calcular Custo")
-        btn_calcular.clicked.connect(self.calcular)
-
-        self.card_resultado = QFrame()
-        self.card_resultado.setStyleSheet("background-color: #ED145B; border-radius: 24px;")
-        resultado_layout = QVBoxLayout()
-        resultado_layout.setContentsMargins(18, 18, 18, 18)
+        btn = QPushButton("Calcular Custo")
+        btn.clicked.connect(self.calcular)
 
         self.resultado = QLabel("")
-        self.resultado.setStyleSheet("font-size: 34px; font-weight: bold; color: #FFFFFF;")
+        self.resultado.setAlignment(Qt.AlignCenter)
+        self.resultado.setStyleSheet("font-size: 34px; font-weight: bold; color: #ED145B;")
 
         self.detalhes = QLabel("")
-        self.detalhes.setStyleSheet("font-size: 13px; color: #FFFFFF;")
+        self.detalhes.setAlignment(Qt.AlignCenter)
         self.detalhes.setWordWrap(True)
+        self.detalhes.setStyleSheet("font-size: 13px; color: #9CA3AF;")
 
-        resultado_layout.addWidget(QLabel("Custo Total Estimado"))
-        resultado_layout.addWidget(self.resultado)
-        resultado_layout.addWidget(self.detalhes)
+        main.addWidget(btn)
+        main.addWidget(self.resultado)
+        main.addWidget(self.detalhes)
+        main.addStretch()
+        main.addLayout(criar_navbar(self, self.usuario, "costs"))
 
-        self.card_resultado.setLayout(resultado_layout)
-        self.card_resultado.hide()
-
-        dica = QFrame()
-        dica_layout = QVBoxLayout()
-        dica_layout.setContentsMargins(18, 18, 18, 18)
-
-        dica_titulo = QLabel("💡 Dica Inteligente")
-        dica_titulo.setStyleSheet("font-weight: bold; color: #FFFFFF;")
-
-        dica_texto = QLabel("Manutenções preventivas podem reduzir custos e evitar gastos inesperados.")
-        dica_texto.setWordWrap(True)
-        dica_texto.setStyleSheet("font-size: 12px; color: #A0A0A8;")
-
-        dica_layout.addWidget(dica_titulo)
-        dica_layout.addWidget(dica_texto)
-        dica.setLayout(dica_layout)
-
-        main_layout.addWidget(card_inputs)
-        main_layout.addWidget(btn_calcular)
-        main_layout.addWidget(self.card_resultado)
-        main_layout.addWidget(dica)
-        main_layout.addStretch()
-        main_layout.addLayout(self.navbar())
-
-        self.setLayout(main_layout)
+        self.setLayout(main)
 
     def calcular(self):
         try:
@@ -884,151 +1093,19 @@ class PrevisaoCusto(QWidget):
             fator = float(self.fator.text())
 
             custo = viagem_controller.prever_custo(distancia, consumo, preco, fator)
-
             litros = distancia / consumo
-            custo_combustivel = litros * preco
-            custo_manutencao = custo - custo_combustivel
+            combustivel = litros * preco
+            manutencao = custo - combustivel
 
             self.resultado.setText(f"R$ {custo:.2f}")
             self.detalhes.setText(
                 f"Litros necessários: {litros:.2f} L\n"
-                f"Custo combustível: R$ {custo_combustivel:.2f}\n"
-                f"Custo manutenção: R$ {custo_manutencao:.2f}"
+                f"Custo combustível: R$ {combustivel:.2f}\n"
+                f"Custo manutenção: R$ {manutencao:.2f}"
             )
 
-            self.card_resultado.show()
-
         except Exception:
-            QMessageBox.warning(self, "Erro", "Preencha os campos com números válidos.")
-
-    def navbar(self):
-        nav = QHBoxLayout()
-
-        botoes = [
-            ("Dashboard", self.voltar),
-            ("Veículos", self.abrir_lista_veiculos),
-            ("Rotas", self.abrir_lista_rotas),
-            ("Custos", lambda: None)
-        ]
-
-        for texto, funcao in botoes:
-            botao = QPushButton(texto)
-            botao.setStyleSheet("""
-                QPushButton {
-                    background-color: #1E1E24;
-                    color: #A0A0A8;
-                    border-radius: 16px;
-                    padding: 10px;
-                    font-size: 11px;
-                }
-
-                QPushButton:hover {
-                    background-color: #ED145B;
-                    color: white;
-                }
-            """)
-            botao.clicked.connect(funcao)
-            nav.addWidget(botao)
-
-        return nav
-
-    def abrir_lista_veiculos(self):
-        self.close()
-        self.tela = ListaVeiculos(self.usuario)
-        self.tela.show()
-
-    def abrir_lista_rotas(self):
-        self.close()
-        self.tela = ListaRotas(self.usuario)
-        self.tela.show()
-
-    def voltar(self):
-        self.close()
-        self.dashboard = Dashboard(self.usuario)
-        self.dashboard.show()
-
-
-class HistoricoGeral(QWidget):
-    def __init__(self, usuario):
-        super().__init__()
-        self.usuario = usuario
-        self.setWindowTitle("Histórico Geral")
-        self.setFixedSize(430, 720)
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(25, 30, 25, 25)
-        layout.setSpacing(12)
-
-        layout.addWidget(criar_titulo("Histórico Geral"))
-
-        historico = QLabel(self.gerar_texto_historico())
-        historico.setStyleSheet("font-size: 12px; color: #FFFFFF;")
-        historico.setWordWrap(True)
-
-        layout.addWidget(historico)
-
-        btn_voltar = QPushButton("Voltar")
-        btn_voltar.clicked.connect(self.voltar)
-
-        layout.addWidget(btn_voltar)
-        layout.addStretch()
-
-        self.setLayout(layout)
-
-    def gerar_texto_historico(self):
-        texto = ""
-
-        texto += "VEÍCULOS CADASTRADOS:\n"
-        veiculos = veiculo_controller.listar()
-
-        if not veiculos:
-            texto += "- Nenhum veículo cadastrado.\n"
-        else:
-            for veiculo in veiculos:
-                texto += f"- {veiculo.modelo} | {veiculo.placa} | {veiculo.tipo}\n"
-
-        texto += "\nROTAS CADASTRADAS:\n"
-        rotas = rota_controller.listar()
-
-        if not rotas:
-            texto += "- Nenhuma rota cadastrada.\n"
-        else:
-            for rota in rotas:
-                texto += f"- {rota.origem} -> {rota.destino} | {rota.distancia} km\n"
-
-        texto += "\nMANUTENÇÕES CADASTRADAS:\n"
-        manutencoes = custo_controller.listar()
-
-        if not manutencoes:
-            texto += "- Nenhuma manutenção cadastrada.\n"
-        else:
-            for manutencao in manutencoes:
-                texto += (
-                    f"- {manutencao.veiculo.modelo} | "
-                    f"{manutencao.tipo_manutencao} | "
-                    f"R$ {manutencao.valor:.2f} | "
-                    f"{manutencao.data}\n"
-                )
-
-        texto += "\nPREVISÕES DE CUSTO:\n"
-        previsoes = viagem_controller.listar_historico_previsoes()
-
-        if not previsoes:
-            texto += "- Nenhuma previsão realizada.\n"
-        else:
-            for previsao in previsoes:
-                texto += (
-                    f"- Distância: {previsao['distancia']} km | "
-                    f"Consumo: {previsao['consumo']} km/l | "
-                    f"Custo previsto: R$ {previsao['custo']:.2f}\n"
-                )
-
-        return texto
-
-    def voltar(self):
-        self.close()
-        self.dashboard = Dashboard(self.usuario)
-        self.dashboard.show()
+            QMessageBox.warning(self, "Erro", "Preencha todos os campos corretamente.")
 
 
 if __name__ == "__main__":

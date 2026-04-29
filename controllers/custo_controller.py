@@ -73,7 +73,9 @@ class CustoController:
         self.custos.append(custo)
         self.salvar_custos()
 
-        return True, "Manutenção cadastrada com sucesso."
+        self.veiculo_controller.atualizar_status(veiculo, "maintenance")
+
+        return True, "Manutenção cadastrada com sucesso. O veículo foi marcado como Em manutenção."
 
     def listar(self):
         return self.custos

@@ -1,0 +1,12 @@
+[
+    {
+        "distancia": 20.0,
+        "consumo": 10.0,
+        "preco_combustivel": 6.5,
+        "fator_manutencao": 15.0,
+        "litros": 2.0,
+        "custo_combustivel": 13.0,
+        "custo_manutencao": 1.95,
+        "custo": 14.95
+    }
+]
