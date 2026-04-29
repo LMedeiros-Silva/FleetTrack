@@ -16,8 +16,7 @@ usuario_controller = UsuarioController()
 veiculo_controller = VeiculoController()
 rota_controller = RotaController()
 viagem_controller = ViagemController()
-custo_controller = CustoController()
-
+custo_controller = CustoController(veiculo_controller)
 
 STYLE = """
 QWidget {
