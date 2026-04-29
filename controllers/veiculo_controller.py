@@ -73,7 +73,7 @@ class VeiculoController:
             return False, "Quilometragem inválida."
 
         if not validar_float_positivo(proxima_manutencao):
-            return False, "Quilometragem da próxima manutenção inválida."
+            return False, "Próxima manutenção inválida."
 
         if not validar_float_positivo(combustivel):
             return False, "Combustível inválido."
@@ -83,7 +83,7 @@ class VeiculoController:
         if combustivel_float < 0 or combustivel_float > 100:
             return False, "Combustível deve estar entre 0 e 100."
 
-        placa_formatada = placa.upper()
+        placa_formatada = placa.upper().replace("-", "").strip()
 
         for veiculo in self.veiculos:
             if veiculo.placa == placa_formatada:
@@ -122,3 +122,12 @@ class VeiculoController:
         veiculo.status = novo_status
         self.salvar_veiculos()
         return True
+
+    def excluir_por_placa(self, placa):
+        for veiculo in self.veiculos:
+            if veiculo.placa == placa:
+                self.veiculos.remove(veiculo)
+                self.salvar_veiculos()
+                return True, "Veículo excluído com sucesso."
+
+        return False, "Veículo não encontrado."

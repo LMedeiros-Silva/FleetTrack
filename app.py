@@ -98,6 +98,26 @@ def botao_secundario(texto):
     return btn
 
 
+def botao_excluir(texto):
+    btn = QPushButton(texto)
+    btn.setStyleSheet("""
+        QPushButton {
+            background-color: #3A111D;
+            color: #FF6B93;
+            border-radius: 16px;
+            padding: 11px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        QPushButton:hover {
+            background-color: #ED145B;
+            color: white;
+        }
+    """)
+    return btn
+
+
 def botao_filtro(texto, ativo):
     btn = QPushButton(texto)
 
@@ -580,8 +600,12 @@ class TelaVeiculos(QWidget):
         grid.addWidget(self.info("🛠️", "Próx. manutenção", f"{v.proxima_manutencao} km"), 1, 0)
         grid.addWidget(self.info("⛽", "Combustível", f"{v.combustivel}%"), 1, 1)
 
+        btn_excluir = botao_excluir("Excluir Veículo")
+        btn_excluir.clicked.connect(lambda: self.excluir_veiculo(v.placa))
+
         layout.addLayout(topo)
         layout.addLayout(grid)
+        layout.addWidget(btn_excluir)
 
         card.setLayout(layout)
         return card
@@ -604,6 +628,25 @@ class TelaVeiculos(QWidget):
 
         card.setLayout(layout)
         return card
+
+    def excluir_veiculo(self, placa):
+        confirmar = QMessageBox.question(
+            self,
+            "Confirmar exclusão",
+            "Deseja realmente excluir este veículo?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        if confirmar == QMessageBox.Yes:
+            sucesso, mensagem = veiculo_controller.excluir_por_placa(placa)
+
+            if sucesso:
+                QMessageBox.information(self, "Sucesso", mensagem)
+                self.close()
+                self.tela = TelaVeiculos(self.usuario, self.filtro)
+                self.tela.show()
+            else:
+                QMessageBox.warning(self, "Erro", mensagem)
 
     def abrir_cadastro(self):
         self.close()
@@ -646,16 +689,15 @@ class TelaViagens(QWidget):
         layout.addLayout(stats)
         layout.addLayout(self.filtros())
 
-        if self.filtro == "all":
-            filtradas = viagens
-        else:
-            filtradas = [v for v in viagens if v.status == self.filtro]
+        encontrou = False
 
-        if not filtradas:
+        for indice, viagem in enumerate(viagens):
+            if self.filtro == "all" or viagem.status == self.filtro:
+                layout.addWidget(self.card_viagem(viagem, indice))
+                encontrou = True
+
+        if not encontrou:
             layout.addWidget(subtitulo("Nenhuma viagem encontrada."))
-        else:
-            for viagem in filtradas:
-                layout.addWidget(self.card_viagem(viagem))
 
         btn = QPushButton("Agendar Nova Viagem")
         btn.clicked.connect(self.abrir_cadastro)
@@ -712,7 +754,7 @@ class TelaViagens(QWidget):
         self.tela = TelaViagens(self.usuario, filtro)
         self.tela.show()
 
-    def card_viagem(self, v):
+    def card_viagem(self, v, indice):
         card = QFrame()
 
         layout = QVBoxLayout()
@@ -748,8 +790,12 @@ class TelaViagens(QWidget):
         grid.addWidget(self.info("👤", "Motorista", v.motorista), 1, 0)
         grid.addWidget(self.info("🚗", "Veículo", f"{v.veiculo_modelo}\n{v.veiculo_placa}"), 1, 1)
 
+        btn_excluir = botao_excluir("Excluir Viagem")
+        btn_excluir.clicked.connect(lambda: self.excluir_viagem(indice))
+
         layout.addLayout(topo)
         layout.addLayout(grid)
+        layout.addWidget(btn_excluir)
 
         card.setLayout(layout)
         return card
@@ -772,6 +818,25 @@ class TelaViagens(QWidget):
 
         card.setLayout(layout)
         return card
+
+    def excluir_viagem(self, indice):
+        confirmar = QMessageBox.question(
+            self,
+            "Confirmar exclusão",
+            "Deseja realmente excluir esta viagem?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        if confirmar == QMessageBox.Yes:
+            sucesso, mensagem = viagem_controller.excluir_por_indice(indice)
+
+            if sucesso:
+                QMessageBox.information(self, "Sucesso", mensagem)
+                self.close()
+                self.tela = TelaViagens(self.usuario, self.filtro)
+                self.tela.show()
+            else:
+                QMessageBox.warning(self, "Erro", mensagem)
 
     def abrir_cadastro(self):
         self.close()
@@ -886,9 +951,11 @@ class CadastroViagem(QWidget):
 
         self.data = QLineEdit()
         self.data.setPlaceholderText("Data")
+        self.data.setInputMask("00/00/0000;_")
 
         self.horario = QLineEdit()
         self.horario.setPlaceholderText("Horário")
+        self.horario.setInputMask("00:00;_")
 
         self.motorista = QLineEdit()
         self.motorista.setPlaceholderText("Motorista")
@@ -990,6 +1057,7 @@ class CadastroManutencao(QWidget):
 
         self.data = QLineEdit()
         self.data.setPlaceholderText("Data")
+        self.data.setInputMask("00/00/0000;_")
 
         layout.addWidget(self.veiculo_combo)
         layout.addWidget(self.tipo)

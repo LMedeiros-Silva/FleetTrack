@@ -100,6 +100,14 @@ class ViagemController:
     def listar(self):
         return self.viagens
 
+    def excluir_por_indice(self, indice):
+        try:
+            self.viagens.pop(indice)
+            self.salvar_viagens()
+            return True, "Viagem excluída com sucesso."
+        except IndexError:
+            return False, "Viagem não encontrada."
+
     def carregar_previsoes(self):
         self.historico_previsoes = Persistencia.carregar("previsoes.json")
 

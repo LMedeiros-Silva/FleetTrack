@@ -1,13 +1,1 @@
-[
-    {
-        "placa": "GJD5J49",
-        "modelo": "ELANTRA",
-        "tipo": "CARRO",
-        "capacidade": 5,
-        "consumo": 10.0,
-        "quilometragem": 0,
-        "proxima_manutencao": 0,
-        "combustivel": 0,
-        "status": "maintenance"
-    }
-]
+[]

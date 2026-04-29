@@ -1,13 +1,1 @@
-[
-    {
-        "origem": "Aclimação",
-        "destino": "Vila Mariana",
-        "distancia": 20.0,
-        "data": "20/04/2026",
-        "horario": "19:20",
-        "motorista": "Carlos",
-        "veiculo_modelo": "ELANTRA",
-        "veiculo_placa": "GJD5J49",
-        "status": "scheduled"
-    }
-]
+[]
