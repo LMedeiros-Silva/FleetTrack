@@ -1,17 +1,9 @@
 import sys
 
 from PySide6.QtWidgets import (
-    QApplication,
-    QWidget,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QVBoxLayout,
-    QHBoxLayout,
-    QGridLayout,
-    QFrame,
-    QMessageBox,
-    QScrollArea
+    QApplication, QWidget, QLabel, QLineEdit, QPushButton,
+    QVBoxLayout, QHBoxLayout, QGridLayout, QFrame,
+    QMessageBox, QScrollArea
 )
 from PySide6.QtCore import Qt
 
@@ -305,30 +297,34 @@ class Dashboard(QWidget):
         titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #FFFFFF;")
         layout.addWidget(titulo)
 
-        viagens = [
-            ("São Paulo", "Campinas", "09:30", "Van Mercedes", "Carlos Silva"),
-            ("Guarulhos", "São José", "11:00", "Ônibus Volvo", "Ana Santos"),
-            ("Ribeirão Preto", "Franca", "14:15", "Micro-ônibus", "João Costa")
-        ]
+        viagens = viagem_controller.listar()
 
-        for origem, destino, horario, veiculo, motorista in viagens:
-            item = QFrame()
-            item.setStyleSheet("background-color: #2A2A32; border-radius: 18px;")
+        if not viagens:
+            vazio = QLabel("Nenhuma viagem cadastrada.")
+            vazio.setStyleSheet("font-size: 13px; color: #A0A0A8;")
+            layout.addWidget(vazio)
+        else:
+            for viagem in viagens:
+                item = QFrame()
+                item.setStyleSheet("background-color: #2A2A32; border-radius: 18px;")
 
-            item_layout = QVBoxLayout()
-            item_layout.setContentsMargins(14, 12, 14, 12)
+                item_layout = QVBoxLayout()
+                item_layout.setContentsMargins(14, 12, 14, 12)
 
-            linha1 = QLabel(f"📍 {origem} → {destino}     {horario}")
-            linha1.setStyleSheet("font-size: 13px; color: #FFFFFF;")
+                linha1 = QLabel(f"📍 {viagem.rota.origem} → {viagem.rota.destino}")
+                linha1.setStyleSheet("font-size: 13px; color: #FFFFFF;")
 
-            linha2 = QLabel(f"{veiculo}  •  {motorista}")
-            linha2.setStyleSheet("font-size: 12px; color: #A0A0A8;")
+                linha2 = QLabel(
+                    f"{viagem.veiculo.modelo} • "
+                    f"Custo previsto: R$ {viagem.custo_previsto:.2f}"
+                )
+                linha2.setStyleSheet("font-size: 12px; color: #A0A0A8;")
 
-            item_layout.addWidget(linha1)
-            item_layout.addWidget(linha2)
-            item.setLayout(item_layout)
+                item_layout.addWidget(linha1)
+                item_layout.addWidget(linha2)
+                item.setLayout(item_layout)
 
-            layout.addWidget(item)
+                layout.addWidget(item)
 
         frame.setLayout(layout)
         return frame
@@ -344,34 +340,60 @@ class Dashboard(QWidget):
         titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #FFFFFF;")
         layout.addWidget(titulo)
 
-        dados = [
-            ("Combustível", 55, "#ED145B", "R$ 6.820"),
-            ("Manutenção", 30, "#7C3AED", f"R$ {custo_controller.total_custos():.2f}"),
-            ("Outros", 15, "#06B6D4", "R$ 1.860")
-        ]
+        total_manutencao = custo_controller.total_custos()
+        previsoes = viagem_controller.listar_historico_previsoes()
 
-        for categoria, porcentagem, cor, valor in dados:
-            linha = QLabel(f"{categoria} — {valor}")
-            linha.setStyleSheet("font-size: 13px; color: #FFFFFF;")
+        total_combustivel = 0
+        total_outros = 0
 
-            barra_fundo = QFrame()
-            barra_fundo.setFixedHeight(12)
-            barra_fundo.setStyleSheet("background-color: #2A2A32; border-radius: 6px;")
+        for previsao in previsoes:
+            total_combustivel += previsao.get("custo_combustivel", 0)
 
-            barra_layout = QHBoxLayout()
-            barra_layout.setContentsMargins(0, 0, 0, 0)
+        total_geral = total_combustivel + total_manutencao + total_outros
 
-            barra = QFrame()
-            barra.setFixedWidth(int(320 * porcentagem / 100))
-            barra.setFixedHeight(12)
-            barra.setStyleSheet(f"background-color: {cor}; border-radius: 6px;")
+        if total_geral == 0:
+            vazio = QLabel("Nenhum custo cadastrado.")
+            vazio.setStyleSheet("font-size: 13px; color: #A0A0A8;")
+            layout.addWidget(vazio)
+        else:
+            dados = [
+                ("Combustível", total_combustivel, "#ED145B"),
+                ("Manutenção", total_manutencao, "#7C3AED"),
+                ("Outros", total_outros, "#06B6D4")
+            ]
 
-            barra_layout.addWidget(barra)
-            barra_layout.addStretch()
-            barra_fundo.setLayout(barra_layout)
+            for categoria, valor, cor in dados:
+                porcentagem = 0
 
-            layout.addWidget(linha)
-            layout.addWidget(barra_fundo)
+                if total_geral > 0:
+                    porcentagem = int((valor / total_geral) * 100)
+
+                linha = QLabel(f"{categoria} — R$ {valor:.2f}")
+                linha.setStyleSheet("font-size: 13px; color: #FFFFFF;")
+
+                barra_fundo = QFrame()
+                barra_fundo.setFixedHeight(12)
+                barra_fundo.setStyleSheet("background-color: #2A2A32; border-radius: 6px;")
+
+                barra_layout = QHBoxLayout()
+                barra_layout.setContentsMargins(0, 0, 0, 0)
+
+                barra = QFrame()
+
+                if valor == 0:
+                    barra.setFixedWidth(0)
+                else:
+                    barra.setFixedWidth(max(8, int(320 * porcentagem / 100)))
+
+                barra.setFixedHeight(12)
+                barra.setStyleSheet(f"background-color: {cor}; border-radius: 6px;")
+
+                barra_layout.addWidget(barra)
+                barra_layout.addStretch()
+                barra_fundo.setLayout(barra_layout)
+
+                layout.addWidget(linha)
+                layout.addWidget(barra_fundo)
 
         frame.setLayout(layout)
         return frame
@@ -657,7 +679,7 @@ class CadastroManutencao(QWidget):
             else:
                 QMessageBox.warning(self, "Erro", mensagem)
 
-        except:
+        except Exception:
             QMessageBox.warning(self, "Erro", "Selecione um índice de veículo válido.")
 
     def voltar(self):
@@ -837,9 +859,7 @@ class PrevisaoCusto(QWidget):
         dica_titulo = QLabel("💡 Dica Inteligente")
         dica_titulo.setStyleSheet("font-weight: bold; color: #FFFFFF;")
 
-        dica_texto = QLabel(
-            "Manutenções preventivas podem reduzir custos e evitar gastos inesperados."
-        )
+        dica_texto = QLabel("Manutenções preventivas podem reduzir custos e evitar gastos inesperados.")
         dica_texto.setWordWrap(True)
         dica_texto.setStyleSheet("font-size: 12px; color: #A0A0A8;")
 
@@ -878,7 +898,7 @@ class PrevisaoCusto(QWidget):
 
             self.card_resultado.show()
 
-        except:
+        except Exception:
             QMessageBox.warning(self, "Erro", "Preencha os campos com números válidos.")
 
     def navbar(self):
