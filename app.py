@@ -810,7 +810,12 @@ class TelaViagens(QWidget):
 
         status = QLabel(texto_status)
         status.setAlignment(Qt.AlignCenter)
-        status.setStyleSheet(f"background-color: {cor_status}; border-radius: 12px; padding: 6px; font-size: 11px;")
+        status.setStyleSheet(
+            f"background-color: {cor_status}; "
+            f"border-radius: 12px; "
+            f"padding: 6px; "
+            f"font-size: 11px;"
+        )
 
         topo.addWidget(rota)
         topo.addStretch()
@@ -824,11 +829,21 @@ class TelaViagens(QWidget):
         grid.addWidget(self.info("👤", "Motorista", v.motorista), 1, 0)
         grid.addWidget(self.info("🚗", "Veículo", f"{v.veiculo_modelo}\n{v.veiculo_placa}"), 1, 1)
 
-        btn_excluir = botao_excluir("Excluir Viagem")
-        btn_excluir.clicked.connect(lambda: self.excluir_viagem(indice))
-
         layout.addLayout(topo)
         layout.addLayout(grid)
+
+        if v.status == "scheduled":
+            btn_andamento = QPushButton("Marcar Em andamento")
+            btn_andamento.clicked.connect(lambda: self.atualizar_status_viagem(indice, "in-progress"))
+            layout.addWidget(btn_andamento)
+
+        elif v.status == "in-progress":
+            btn_concluir = QPushButton("Marcar Concluída")
+            btn_concluir.clicked.connect(lambda: self.atualizar_status_viagem(indice, "completed"))
+            layout.addWidget(btn_concluir)
+
+        btn_excluir = botao_excluir("Excluir Viagem")
+        btn_excluir.clicked.connect(lambda: self.excluir_viagem(indice))
         layout.addWidget(btn_excluir)
 
         card.setLayout(layout)
@@ -852,6 +867,17 @@ class TelaViagens(QWidget):
 
         card.setLayout(layout)
         return card
+
+    def atualizar_status_viagem(self, indice, novo_status):
+        sucesso, mensagem = viagem_controller.atualizar_status(indice, novo_status)
+
+        if sucesso:
+            QMessageBox.information(self, "Sucesso", mensagem)
+            self.close()
+            self.tela = TelaViagens(self.usuario, self.filtro)
+            self.tela.show()
+        else:
+            QMessageBox.warning(self, "Erro", mensagem)
 
     def excluir_viagem(self, indice):
         confirmar = QMessageBox.question(
@@ -1270,11 +1296,12 @@ class PrevisaoCusto(QWidget):
         self.setFixedSize(430, 780)
 
         main = QVBoxLayout()
-        main.setContentsMargins(26, 26, 26, 26)
-        main.setSpacing(16)
+        main.setContentsMargins(0, 0, 0, 0)
 
-        main.addWidget(titulo("Previsão de Custo"))
-        main.addWidget(subtitulo("Calcule o custo estimado de combustível da viagem."))
+        scroll, layout = criar_scroll()
+
+        layout.addWidget(titulo("Previsão de Custo"))
+        layout.addWidget(subtitulo("Calcule e consulte o histórico de custos de combustível."))
 
         self.distancia = QLineEdit()
         self.distancia.setPlaceholderText("Distância da viagem (km)")
@@ -1286,10 +1313,11 @@ class PrevisaoCusto(QWidget):
         self.preco.setPlaceholderText("Preço do combustível")
 
         for campo in [self.distancia, self.consumo, self.preco]:
-            main.addWidget(campo)
+            layout.addWidget(campo)
 
         btn = QPushButton("Calcular Custo")
         btn.clicked.connect(self.calcular)
+        layout.addWidget(btn)
 
         self.resultado = QLabel("")
         self.resultado.setAlignment(Qt.AlignCenter)
@@ -1300,13 +1328,54 @@ class PrevisaoCusto(QWidget):
         self.detalhes.setWordWrap(True)
         self.detalhes.setStyleSheet("font-size: 13px; color: #9CA3AF;")
 
-        main.addWidget(btn)
-        main.addWidget(self.resultado)
-        main.addWidget(self.detalhes)
-        main.addStretch()
+        layout.addWidget(self.resultado)
+        layout.addWidget(self.detalhes)
+
+        layout.addWidget(subtitulo("Histórico de Previsões"))
+
+        historico = viagem_controller.listar_historico_previsoes()
+
+        if not historico:
+            layout.addWidget(subtitulo("Nenhuma previsão realizada."))
+        else:
+            for previsao in historico:
+                layout.addWidget(self.card_previsao(previsao))
+
+        layout.addStretch()
+
+        main.addWidget(scroll)
         main.addLayout(criar_navbar(self, self.usuario, "costs"))
 
         self.setLayout(main)
+
+    def card_previsao(self, previsao):
+        card = QFrame()
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(8)
+
+        distancia = previsao.get("distancia", 0)
+        consumo = previsao.get("consumo", 0)
+        preco = previsao.get("preco_combustivel", 0)
+        litros = previsao.get("litros", 0)
+        custo = previsao.get("custo", 0)
+
+        texto = QLabel(
+            f"Distância: {distancia} km\n"
+            f"Consumo: {consumo} km/l\n"
+            f"Preço combustível: R$ {preco:.2f}\n"
+            f"Litros necessários: {litros:.2f} L\n"
+            f"Custo estimado: R$ {custo:.2f}"
+        )
+
+        texto.setStyleSheet("font-size: 13px; color: #D1D5DB;")
+        texto.setWordWrap(True)
+
+        layout.addWidget(texto)
+
+        card.setLayout(layout)
+        return card
 
     def calcular(self):
         try:
@@ -1315,19 +1384,22 @@ class PrevisaoCusto(QWidget):
             preco = float(self.preco.text())
 
             custo = viagem_controller.prever_custo(distancia, consumo, preco)
-
             litros = distancia / consumo
-            combustivel = litros * preco
 
             self.resultado.setText(f"R$ {custo:.2f}")
             self.detalhes.setText(
                 f"Litros necessários: {litros:.2f} L\n"
-                f"Custo combustível: R$ {combustivel:.2f}"
+                f"Custo combustível: R$ {custo:.2f}"
             )
+
+            QMessageBox.information(self, "Sucesso", "Previsão salva no histórico.")
+
+            self.close()
+            self.tela = PrevisaoCusto(self.usuario)
+            self.tela.show()
 
         except Exception:
             QMessageBox.warning(self, "Erro", "Preencha todos os campos corretamente.")
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

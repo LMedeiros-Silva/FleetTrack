@@ -1,13 +1,1 @@
-[
-    {
-        "origem": "Lins de Vansconcelos",
-        "destino": "Vila Mariana",
-        "distancia": 20.0,
-        "data": "05/06/2026",
-        "horario": "22:00",
-        "motorista": "Carlos",
-        "veiculo_modelo": "Mercedes",
-        "veiculo_placa": "ABC1234",
-        "status": "in-progress"
-    }
-]
+[]

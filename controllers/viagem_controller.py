@@ -98,6 +98,17 @@ class ViagemController:
         except IndexError:
             return False, "Viagem não encontrada."
 
+    def atualizar_status(self, indice, novo_status):
+        if novo_status not in ["scheduled", "in-progress", "completed"]:
+            return False, "Status inválido."
+
+        try:
+            self.viagens[indice].status = novo_status
+            self.salvar_viagens()
+            return True, "Status da viagem atualizado com sucesso."
+        except IndexError:
+            return False, "Viagem não encontrada."
+
     def carregar_previsoes(self):
         self.historico_previsoes = Persistencia.carregar("previsoes.json")
 
