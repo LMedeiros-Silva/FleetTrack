@@ -169,8 +169,8 @@ def criar_scroll():
 
 def criar_navbar(tela_atual, usuario, ativo):
     nav = QHBoxLayout()
-    nav.setContentsMargins(14, 10, 14, 12)
-    nav.setSpacing(8)
+    nav.setContentsMargins(8, 10, 8, 12)
+    nav.setSpacing(6)
 
     def ir_dashboard():
         tela_atual.close()
@@ -187,15 +187,21 @@ def criar_navbar(tela_atual, usuario, ativo):
         tela_atual.tela = TelaViagens(usuario)
         tela_atual.tela.show()
 
+    def ir_manutencoes():
+        tela_atual.close()
+        tela_atual.tela = TelaManutencoes(usuario)
+        tela_atual.tela.show()
+
     def ir_custos():
         tela_atual.close()
         tela_atual.tela = PrevisaoCusto(usuario)
         tela_atual.tela.show()
 
     itens = [
-        ("Dashboard", "dashboard", ir_dashboard),
+        ("Dash", "dashboard", ir_dashboard),
         ("Veículos", "vehicles", ir_veiculos),
         ("Viagens", "trips", ir_viagens),
+        ("Manut.", "maintenance", ir_manutencoes),
         ("Custos", "costs", ir_custos)
     ]
 
@@ -600,11 +606,20 @@ class TelaVeiculos(QWidget):
         grid.addWidget(self.info("🛠️", "Próx. manutenção", f"{v.proxima_manutencao} km"), 1, 0)
         grid.addWidget(self.info("⛽", "Combustível", f"{v.combustivel}%"), 1, 1)
 
-        btn_excluir = botao_excluir("Excluir Veículo")
-        btn_excluir.clicked.connect(lambda: self.excluir_veiculo(v.placa))
+        label_manutencao = QLabel(f"Manutenção: {custo_controller.buscar_status_manutencao(v.placa)}")
+        label_manutencao.setStyleSheet("font-size: 12px; color: #9CA3AF;")
 
         layout.addLayout(topo)
         layout.addLayout(grid)
+        layout.addWidget(label_manutencao)
+
+        if v.status == "maintenance":
+            btn_concluir = QPushButton("Concluir Manutenção")
+            btn_concluir.clicked.connect(lambda: self.concluir_manutencao(v.placa))
+            layout.addWidget(btn_concluir)
+
+        btn_excluir = botao_excluir("Excluir Veículo")
+        btn_excluir.clicked.connect(lambda: self.excluir_veiculo(v.placa))
         layout.addWidget(btn_excluir)
 
         card.setLayout(layout)
@@ -628,6 +643,25 @@ class TelaVeiculos(QWidget):
 
         card.setLayout(layout)
         return card
+
+    def concluir_manutencao(self, placa):
+        confirmar = QMessageBox.question(
+            self,
+            "Concluir manutenção",
+            "Deseja concluir a manutenção deste veículo?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        if confirmar == QMessageBox.Yes:
+            sucesso, mensagem = custo_controller.concluir_manutencao_do_veiculo(placa)
+
+            if sucesso:
+                QMessageBox.information(self, "Sucesso", mensagem)
+                self.close()
+                self.tela = TelaVeiculos(self.usuario, self.filtro)
+                self.tela.show()
+            else:
+                QMessageBox.warning(self, "Erro", mensagem)
 
     def excluir_veiculo(self, placa):
         confirmar = QMessageBox.question(
@@ -842,6 +876,130 @@ class TelaViagens(QWidget):
         self.close()
         self.tela = CadastroViagem(self.usuario)
         self.tela.show()
+
+
+class TelaManutencoes(QWidget):
+    def __init__(self, usuario):
+        super().__init__()
+        self.usuario = usuario
+        self.setWindowTitle("Manutenções")
+        self.setFixedSize(430, 780)
+        self.montar()
+
+    def montar(self):
+        main = QVBoxLayout()
+        main.setContentsMargins(0, 0, 0, 0)
+
+        scroll, layout = criar_scroll()
+
+        layout.addWidget(titulo("Manutenções"))
+        layout.addWidget(subtitulo("Histórico de manutenções pendentes e concluídas"))
+
+        manutencoes = custo_controller.listar()
+
+        pendentes = len([m for m in manutencoes if m.status == "pending"])
+        concluidas = len([m for m in manutencoes if m.status == "completed"])
+
+        stats = QGridLayout()
+        stats.setSpacing(10)
+
+        stats.addWidget(self.card_resumo(len(manutencoes), "Total", "#FFFFFF"), 0, 0)
+        stats.addWidget(self.card_resumo(pendentes, "Pendentes", "#F59E0B"), 0, 1)
+        stats.addWidget(self.card_resumo(concluidas, "Concluídas", "#10B981"), 0, 2)
+
+        layout.addLayout(stats)
+
+        if not manutencoes:
+            layout.addWidget(subtitulo("Nenhuma manutenção cadastrada."))
+        else:
+            for manutencao in manutencoes:
+                layout.addWidget(self.card_manutencao(manutencao))
+
+        layout.addStretch()
+
+        main.addWidget(scroll)
+        main.addLayout(criar_navbar(self, self.usuario, "maintenance"))
+
+        self.setLayout(main)
+
+    def card_resumo(self, valor, texto, cor):
+        card = QFrame()
+        card.setFixedSize(116, 82)
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(8, 8, 8, 8)
+
+        v = QLabel(str(valor))
+        v.setAlignment(Qt.AlignCenter)
+        v.setStyleSheet(f"font-size: 22px; font-weight: bold; color: {cor};")
+
+        t = QLabel(texto)
+        t.setAlignment(Qt.AlignCenter)
+        t.setStyleSheet("font-size: 11px; color: #9CA3AF;")
+
+        layout.addWidget(v)
+        layout.addWidget(t)
+
+        card.setLayout(layout)
+        return card
+
+    def card_manutencao(self, manutencao):
+        card = QFrame()
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(10)
+
+        status_texto = "Pendente" if manutencao.status == "pending" else "Concluída"
+        status_cor = "#F59E0B" if manutencao.status == "pending" else "#10B981"
+
+        titulo_card = QLabel(f"{manutencao.veiculo.modelo} | {manutencao.veiculo.placa}")
+        titulo_card.setStyleSheet("font-size: 16px; font-weight: bold; color: #FFFFFF;")
+
+        status = QLabel(status_texto)
+        status.setStyleSheet(
+            f"background-color: {status_cor}; border-radius: 12px; padding: 6px; font-size: 11px;"
+        )
+
+        descricao = QLabel(
+            f"Tipo: {manutencao.tipo_manutencao}\n"
+            f"Descrição: {manutencao.descricao}\n"
+            f"Valor: R$ {manutencao.valor:.2f}\n"
+            f"Data: {manutencao.data}"
+        )
+        descricao.setStyleSheet("font-size: 13px; color: #D1D5DB;")
+        descricao.setWordWrap(True)
+
+        layout.addWidget(titulo_card)
+        layout.addWidget(status)
+        layout.addWidget(descricao)
+
+        if manutencao.status == "pending":
+            btn_concluir = QPushButton("Concluir Manutenção")
+            btn_concluir.clicked.connect(lambda: self.concluir_manutencao(manutencao.veiculo.placa))
+            layout.addWidget(btn_concluir)
+
+        card.setLayout(layout)
+        return card
+
+    def concluir_manutencao(self, placa):
+        confirmar = QMessageBox.question(
+            self,
+            "Concluir manutenção",
+            "Deseja concluir esta manutenção?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        if confirmar == QMessageBox.Yes:
+            sucesso, mensagem = custo_controller.concluir_manutencao_do_veiculo(placa)
+
+            if sucesso:
+                QMessageBox.information(self, "Sucesso", mensagem)
+                self.close()
+                self.tela = TelaManutencoes(self.usuario)
+                self.tela.show()
+            else:
+                QMessageBox.warning(self, "Erro", mensagem)
 
 
 class CadastroVeiculo(QWidget):
@@ -1100,7 +1258,7 @@ class CadastroManutencao(QWidget):
 
     def voltar(self):
         self.close()
-        self.tela = TelaVeiculos(self.usuario)
+        self.tela = TelaManutencoes(self.usuario)
         self.tela.show()
 
 

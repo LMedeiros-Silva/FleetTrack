@@ -1,9 +1,10 @@
 [
     {
-        "placa_veiculo": "GJD5J49",
+        "placa_veiculo": "ABC1234",
         "tipo_manutencao": "Revisao",
         "descricao": "Motor",
         "valor": 5000.0,
-        "data": "24/04/2026"
+        "data": "22/09/2026",
+        "status": "completed"
     }
 ]

@@ -1,1 +1,13 @@
-[]
+[
+    {
+        "placa": "ABC1234",
+        "modelo": "Mercedes",
+        "tipo": "Onibus",
+        "capacidade": 50,
+        "consumo": 11.0,
+        "quilometragem": 100.0,
+        "proxima_manutencao": 25000.0,
+        "combustivel": 90.0,
+        "status": "active"
+    }
+]

@@ -21,7 +21,8 @@ class CustoController:
                     item["tipo_manutencao"],
                     item["descricao"],
                     item["valor"],
-                    item["data"]
+                    item["data"],
+                    item.get("status", "pending")
                 )
                 self.custos.append(custo)
 
@@ -34,7 +35,8 @@ class CustoController:
                 "tipo_manutencao": custo.tipo_manutencao,
                 "descricao": custo.descricao,
                 "valor": custo.valor,
-                "data": custo.data
+                "data": custo.data,
+                "status": custo.status
             })
 
         Persistencia.salvar("manutencoes.json", dados)
@@ -43,7 +45,6 @@ class CustoController:
         for veiculo in self.veiculo_controller.listar():
             if veiculo.placa == placa:
                 return veiculo
-
         return None
 
     def adicionar(self, veiculo, tipo_manutencao, descricao, valor, data):
@@ -67,23 +68,47 @@ class CustoController:
             tipo_manutencao,
             descricao,
             float(valor),
-            data
+            data,
+            "pending"
         )
 
         self.custos.append(custo)
         self.salvar_custos()
-
         self.veiculo_controller.atualizar_status(veiculo, "maintenance")
 
-        return True, "Manutenção cadastrada com sucesso. O veículo foi marcado como Em manutenção."
+        return True, "Manutenção cadastrada como pendente."
+
+    def concluir_manutencao_do_veiculo(self, placa):
+        for custo in self.custos:
+            if custo.veiculo.placa == placa and custo.status == "pending":
+                custo.status = "completed"
+                self.salvar_custos()
+
+                veiculo = self.buscar_veiculo_por_placa(placa)
+                if veiculo:
+                    existe_pendente = any(
+                        c.veiculo.placa == placa and c.status == "pending"
+                        for c in self.custos
+                    )
+
+                    if not existe_pendente:
+                        self.veiculo_controller.atualizar_status(veiculo, "active")
+
+                return True, "Manutenção concluída com sucesso."
+
+        return False, "Nenhuma manutenção pendente encontrada."
+
+    def buscar_status_manutencao(self, placa):
+        for custo in self.custos:
+            if custo.veiculo.placa == placa and custo.status == "pending":
+                return "Pendente"
+        return "Concluída"
 
     def listar(self):
         return self.custos
 
     def total_custos(self):
         total = 0
-
         for custo in self.custos:
             total += custo.valor
-
         return total
