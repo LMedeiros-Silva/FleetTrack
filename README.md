@@ -1,59 +1,92 @@
-# 🚗 FleetTrack — Sistema de Gerenciamento de Veículos
+# 🚗 FleetTrack FIAP — Sistema de Gerenciamento de Frota
 
 ## 📌 Descrição do Problema
 
-O controle de veículos em empresas muitas vezes é feito de forma manual ou desorganizada, o que pode gerar inconsistências nos dados, dificuldade de gerenciamento e falta de controle sobre informações importantes como cadastro e validação dos veículos.
+A gestão de veículos institucionais, como ônibus fretados e veículos administrativos, muitas vezes é feita de forma manual ou descentralizada, o que pode gerar:
+
+* Falta de controle operacional
+* Dificuldade no planejamento de rotas
+* Erros no cálculo de custos
+* Baixa eficiência na tomada de decisão
 
 ---
 
 ## 🚀 Solução Proposta
 
-Desenvolvimento de um sistema em Python para gerenciamento de veículos, permitindo cadastro, validação de dados (placa, marca e custo), edição, exclusão e visualização das informações de forma simples e organizada.
+Desenvolvimento de um sistema em Python para gerenciamento de frota institucional da FIAP, permitindo:
+
+* Cadastro de veículos (incluindo ônibus FIAPÃO)
+* Cadastro de rotas
+* Controle de viagens
+* Simulação e previsão de custos operacionais
+* Interface gráfica moderna para melhor experiência do usuário
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-Python 3.11
+* Python 3.11
+* PySide6 (Interface gráfica)
+* Arquitetura MVC
 
 ---
 
 ## ⚙️ Como Executar
 
 ```bash
-python main.py
+pip install PySide6
+python app.py
 ```
 
 ---
 
 ## 📂 Estrutura do Projeto
 
+```text
 fleettrack/
-├── main.py
-└── README.md
+├── app.py
+├── models/
+├── controllers/
+├── services/
+├── utils/
+```
 
 ---
 
 ## 🧩 Funcionalidades Implementadas
 
-* Cadastro de veículos (UC01)
-* Validação de dados (placa, marca e custo) (UC02)
-* Visualização de veículos (UC03)
-* Edição de veículos (UC04)
-* Exclusão de veículos (UC05)
+* Login de usuário (UC01)
+* Cadastro de usuário (UC02)
+* Cadastro de veículos institucionais (UC03)
+* Cadastro de rotas (UC04)
+* Visualização no dashboard (UC05)
+* Previsão de custo de viagem (UC06 - Diferencial)
+
+---
+
+## 🧠 Diferencial
+
+O sistema possui um módulo de **previsão inteligente de custo**, que calcula automaticamente o custo de uma viagem com base em:
+
+* Distância
+* Consumo do veículo
+* Preço do combustível
+* Taxa de manutenção preventiva
+
+Esse recurso simula um cenário real de gestão de frota e auxilia na tomada de decisão.
 
 ---
 
 ## 📸 Demonstração
 
-https://youtu.be/raa5oTJ3_-E
+(Coloque aqui o link do seu vídeo atualizado)
 
 ---
 
 ## 👨‍💻 Integrantes do Grupo
 
 * Leonardo Medeiros (commits: feat, docs) (RM559220)
-* Arthur Bergamaço (commits: feat, refactor) (RM556207)  
+* Arthur Bergamaço (commits: feat, refactor) (RM556207)
 * Breno Barbosa (commits: feat, test) (RM555348)
 * Renan Melo (commits: docs, feat) (RM558535)
 * Pietro Rodriguez (commits: feat) (RM555899)
@@ -64,7 +97,5 @@ https://youtu.be/raa5oTJ3_-E
 ## 🔗 Links
 
 * Repositório: https://github.com/LMedeiros-Silva/FleetTrack
-* Miro: https://miro.com/app/board/uXjVGpfw9Tc=/
-* Vídeo: https://youtu.be/raa5oTJ3_-E
-
-
+* Miro: (coloque o link atualizado)
+* Vídeo: (coloque o vídeo atualizado)
