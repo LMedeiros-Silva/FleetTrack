@@ -1274,21 +1274,18 @@ class PrevisaoCusto(QWidget):
         main.setSpacing(16)
 
         main.addWidget(titulo("Previsão de Custo"))
-        main.addWidget(subtitulo("Simule o custo estimado de uma viagem."))
+        main.addWidget(subtitulo("Calcule o custo estimado de combustível da viagem."))
 
         self.distancia = QLineEdit()
         self.distancia.setPlaceholderText("Distância da viagem (km)")
 
         self.consumo = QLineEdit()
-        self.consumo.setPlaceholderText("Consumo médio (km/l)")
+        self.consumo.setPlaceholderText("Consumo médio do veículo (km/l)")
 
         self.preco = QLineEdit()
         self.preco.setPlaceholderText("Preço do combustível")
 
-        self.fator = QLineEdit()
-        self.fator.setPlaceholderText("Fator de manutenção (%)")
-
-        for campo in [self.distancia, self.consumo, self.preco, self.fator]:
+        for campo in [self.distancia, self.consumo, self.preco]:
             main.addWidget(campo)
 
         btn = QPushButton("Calcular Custo")
@@ -1316,18 +1313,16 @@ class PrevisaoCusto(QWidget):
             distancia = float(self.distancia.text())
             consumo = float(self.consumo.text())
             preco = float(self.preco.text())
-            fator = float(self.fator.text())
 
-            custo = viagem_controller.prever_custo(distancia, consumo, preco, fator)
+            custo = viagem_controller.prever_custo(distancia, consumo, preco)
+
             litros = distancia / consumo
             combustivel = litros * preco
-            manutencao = custo - combustivel
 
             self.resultado.setText(f"R$ {custo:.2f}")
             self.detalhes.setText(
                 f"Litros necessários: {litros:.2f} L\n"
-                f"Custo combustível: R$ {combustivel:.2f}\n"
-                f"Custo manutenção: R$ {manutencao:.2f}"
+                f"Custo combustível: R$ {combustivel:.2f}"
             )
 
         except Exception:

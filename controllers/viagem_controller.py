@@ -45,17 +45,7 @@ class ViagemController:
 
         Persistencia.salvar("viagens.json", dados)
 
-    def cadastrar_viagem(
-        self,
-        origem,
-        destino,
-        distancia,
-        data,
-        horario,
-        motorista,
-        veiculo,
-        status
-    ):
+    def cadastrar_viagem(self, origem, destino, distancia, data, horario, motorista, veiculo, status):
         if not validar_texto(origem):
             return False, "Origem inválida."
 
@@ -114,29 +104,22 @@ class ViagemController:
     def salvar_previsoes(self):
         Persistencia.salvar("previsoes.json", self.historico_previsoes)
 
-    def prever_custo(self, distancia, consumo, preco_combustivel, fator_manutencao=15):
-        fator = fator_manutencao / 100
-
+    def prever_custo(self, distancia, consumo, preco_combustivel):
         litros = distancia / consumo
         custo_combustivel = litros * preco_combustivel
-        custo_manutencao = custo_combustivel * fator
-        custo_total = custo_combustivel + custo_manutencao
 
         previsao = {
             "distancia": distancia,
             "consumo": consumo,
             "preco_combustivel": preco_combustivel,
-            "fator_manutencao": fator_manutencao,
             "litros": round(litros, 2),
-            "custo_combustivel": round(custo_combustivel, 2),
-            "custo_manutencao": round(custo_manutencao, 2),
-            "custo": round(custo_total, 2)
+            "custo": round(custo_combustivel, 2)
         }
 
         self.historico_previsoes.append(previsao)
         self.salvar_previsoes()
 
-        return round(custo_total, 2)
+        return round(custo_combustivel, 2)
 
     def listar_historico_previsoes(self):
         return self.historico_previsoes
