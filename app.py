@@ -185,11 +185,11 @@ class Dashboard(QWidget):
         super().__init__()
         self.usuario = usuario
         self.setWindowTitle("FleetTrack FIAP - Dashboard")
-        self.setFixedSize(430, 720)
+        self.setFixedSize(430, 760)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(25, 30, 25, 25)
-        layout.setSpacing(18)
+        layout.setSpacing(14)
 
         titulo = QLabel("FleetTrack FIAP")
         titulo.setStyleSheet("font-size: 24px; font-weight: bold; color: #ED145B;")
@@ -211,8 +211,17 @@ class Dashboard(QWidget):
         btn_rota = QPushButton("Cadastrar Rota")
         btn_rota.clicked.connect(self.abrir_cadastro_rota)
 
+        btn_listar_veiculos = QPushButton("Ver Veículos Cadastrados")
+        btn_listar_veiculos.clicked.connect(self.abrir_lista_veiculos)
+
+        btn_listar_rotas = QPushButton("Ver Rotas Cadastradas")
+        btn_listar_rotas.clicked.connect(self.abrir_lista_rotas)
+
         btn_previsao = QPushButton("Previsão de Custo")
         btn_previsao.clicked.connect(self.abrir_previsao)
+
+        btn_historico = QPushButton("Histórico Geral")
+        btn_historico.clicked.connect(self.abrir_historico)
 
         btn_sair = QPushButton("Sair")
         btn_sair.clicked.connect(self.sair)
@@ -222,7 +231,10 @@ class Dashboard(QWidget):
         layout.addLayout(grid)
         layout.addWidget(btn_veiculo)
         layout.addWidget(btn_rota)
+        layout.addWidget(btn_listar_veiculos)
+        layout.addWidget(btn_listar_rotas)
         layout.addWidget(btn_previsao)
+        layout.addWidget(btn_historico)
         layout.addWidget(btn_sair)
         layout.addStretch()
 
@@ -257,9 +269,24 @@ class Dashboard(QWidget):
         self.tela = CadastroRota(self.usuario)
         self.tela.show()
 
+    def abrir_lista_veiculos(self):
+        self.close()
+        self.tela = ListaVeiculos(self.usuario)
+        self.tela.show()
+
+    def abrir_lista_rotas(self):
+        self.close()
+        self.tela = ListaRotas(self.usuario)
+        self.tela.show()
+
     def abrir_previsao(self):
         self.close()
         self.tela = PrevisaoCusto(self.usuario)
+        self.tela.show()
+
+    def abrir_historico(self):
+        self.close()
+        self.tela = HistoricoGeral(self.usuario)
         self.tela.show()
 
     def sair(self):
@@ -394,6 +421,112 @@ class CadastroRota(QWidget):
         self.dashboard.show()
 
 
+class ListaVeiculos(QWidget):
+    def __init__(self, usuario):
+        super().__init__()
+        self.usuario = usuario
+        self.setWindowTitle("Veículos Cadastrados")
+        self.setFixedSize(430, 720)
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(25, 30, 25, 25)
+        layout.setSpacing(15)
+
+        titulo = QLabel("Veículos Cadastrados")
+        titulo.setStyleSheet("font-size: 24px; font-weight: bold; color: #ED145B;")
+        layout.addWidget(titulo)
+
+        veiculos = veiculo_controller.listar()
+
+        if not veiculos:
+            vazio = QLabel("Nenhum veículo cadastrado.")
+            vazio.setStyleSheet("color: #B8B8C0;")
+            layout.addWidget(vazio)
+        else:
+            for veiculo in veiculos:
+                card = QFrame()
+                card_layout = QVBoxLayout()
+
+                texto = QLabel(
+                    f"Placa: {veiculo.placa}\n"
+                    f"Modelo: {veiculo.modelo}\n"
+                    f"Tipo: {veiculo.tipo}\n"
+                    f"Capacidade: {veiculo.capacidade}\n"
+                    f"Consumo: {veiculo.consumo} km/l"
+                )
+
+                texto.setStyleSheet("font-size: 13px; color: #FFFFFF;")
+                card_layout.addWidget(texto)
+                card.setLayout(card_layout)
+
+                layout.addWidget(card)
+
+        btn_voltar = QPushButton("Voltar")
+        btn_voltar.clicked.connect(self.voltar)
+
+        layout.addWidget(btn_voltar)
+        layout.addStretch()
+
+        self.setLayout(layout)
+
+    def voltar(self):
+        self.close()
+        self.dashboard = Dashboard(self.usuario)
+        self.dashboard.show()
+
+
+class ListaRotas(QWidget):
+    def __init__(self, usuario):
+        super().__init__()
+        self.usuario = usuario
+        self.setWindowTitle("Rotas Cadastradas")
+        self.setFixedSize(430, 720)
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(25, 30, 25, 25)
+        layout.setSpacing(15)
+
+        titulo = QLabel("Rotas Cadastradas")
+        titulo.setStyleSheet("font-size: 24px; font-weight: bold; color: #ED145B;")
+        layout.addWidget(titulo)
+
+        rotas = rota_controller.listar()
+
+        if not rotas:
+            vazio = QLabel("Nenhuma rota cadastrada.")
+            vazio.setStyleSheet("color: #B8B8C0;")
+            layout.addWidget(vazio)
+        else:
+            for rota in rotas:
+                card = QFrame()
+                card_layout = QVBoxLayout()
+
+                texto = QLabel(
+                    f"Origem: {rota.origem}\n"
+                    f"Destino: {rota.destino}\n"
+                    f"Distância: {rota.distancia} km"
+                )
+
+                texto.setStyleSheet("font-size: 13px; color: #FFFFFF;")
+                card_layout.addWidget(texto)
+                card.setLayout(card_layout)
+
+                layout.addWidget(card)
+
+        btn_voltar = QPushButton("Voltar")
+        btn_voltar.clicked.connect(self.voltar)
+
+        layout.addWidget(btn_voltar)
+        layout.addStretch()
+
+        self.setLayout(layout)
+
+    def voltar(self):
+        self.close()
+        self.dashboard = Dashboard(self.usuario)
+        self.dashboard.show()
+
+
 class PrevisaoCusto(QWidget):
     def __init__(self, usuario):
         super().__init__()
@@ -467,6 +600,78 @@ class PrevisaoCusto(QWidget):
 
         except ValueError:
             QMessageBox.warning(self, "Erro", "Preencha os campos com números válidos.")
+
+    def voltar(self):
+        self.close()
+        self.dashboard = Dashboard(self.usuario)
+        self.dashboard.show()
+
+
+class HistoricoGeral(QWidget):
+    def __init__(self, usuario):
+        super().__init__()
+        self.usuario = usuario
+        self.setWindowTitle("Histórico Geral")
+        self.setFixedSize(430, 720)
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(25, 30, 25, 25)
+        layout.setSpacing(12)
+
+        titulo = QLabel("Histórico Geral")
+        titulo.setStyleSheet("font-size: 24px; font-weight: bold; color: #ED145B;")
+        layout.addWidget(titulo)
+
+        historico = QLabel(self.gerar_texto_historico())
+        historico.setStyleSheet("font-size: 12px; color: #FFFFFF;")
+        historico.setWordWrap(True)
+
+        layout.addWidget(historico)
+
+        btn_voltar = QPushButton("Voltar")
+        btn_voltar.clicked.connect(self.voltar)
+
+        layout.addWidget(btn_voltar)
+        layout.addStretch()
+
+        self.setLayout(layout)
+
+    def gerar_texto_historico(self):
+        texto = ""
+
+        texto += "VEÍCULOS CADASTRADOS:\n"
+        veiculos = veiculo_controller.listar()
+
+        if not veiculos:
+            texto += "- Nenhum veículo cadastrado.\n"
+        else:
+            for veiculo in veiculos:
+                texto += f"- {veiculo.modelo} | {veiculo.placa} | {veiculo.tipo}\n"
+
+        texto += "\nROTAS CADASTRADAS:\n"
+        rotas = rota_controller.listar()
+
+        if not rotas:
+            texto += "- Nenhuma rota cadastrada.\n"
+        else:
+            for rota in rotas:
+                texto += f"- {rota.origem} -> {rota.destino} | {rota.distancia} km\n"
+
+        texto += "\nPREVISÕES DE CUSTO:\n"
+        previsoes = viagem_controller.listar_historico_previsoes()
+
+        if not previsoes:
+            texto += "- Nenhuma previsão realizada.\n"
+        else:
+            for previsao in previsoes:
+                texto += (
+                    f"- Distância: {previsao['distancia']} km | "
+                    f"Consumo: {previsao['consumo']} km/l | "
+                    f"Preço: R$ {previsao['preco_combustivel']} | "
+                    f"Custo previsto: R$ {previsao['custo']:.2f}\n"
+                )
+
+        return texto
 
     def voltar(self):
         self.close()
