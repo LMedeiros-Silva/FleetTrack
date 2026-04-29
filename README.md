@@ -97,5 +97,5 @@ Esse recurso simula um cenário real de gestão de frota e auxilia na tomada de 
 ## 🔗 Links
 
 * Repositório: https://github.com/LMedeiros-Silva/FleetTrack
-* Miro: (coloque o link atualizado)
-* Vídeo: (coloque o vídeo atualizado)
+* Miro: (https://miro.com/app/board/uXjVGpfw9Tc=/)
+* Vídeo: (https://youtu.be/cMjPn5fjZrM)
